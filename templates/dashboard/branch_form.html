@@ -1,0 +1,20 @@
+{% extends "base_app.html" %}
+{% block title %}{{ title }} — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header"><h1>{{ title }}</h1></header>
+<form method="post" class="panel">
+  {% csrf_token %}
+  {% for field in form %}
+  <div class="form-group">
+    {% if field.field.widget.input_type == 'checkbox' %}
+      <label style="display:flex;align-items:center;gap:0.6rem;">{{ field }} {{ field.label }}</label>
+    {% else %}
+      <label class="form-label">{{ field.label }}</label>
+      {{ field }}
+      {% if field.help_text %}<div class="form-hint">{{ field.help_text }}</div>{% endif %}
+    {% endif %}
+  </div>
+  {% endfor %}
+  <button class="btn btn-primary btn-block" type="submit">Guardar</button>
+</form>
+{% endblock %}

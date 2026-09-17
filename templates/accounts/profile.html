@@ -1,0 +1,21 @@
+{% extends "base_app.html" %}
+{% block title %}Perfil — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="eyebrow">{{ user.get_role_display }}</div>
+  <h1>Perfil</h1>
+</header>
+<form method="post" enctype="multipart/form-data" class="panel">
+  {% csrf_token %}
+  {% for field in form %}
+  <div class="form-group">
+    <label class="form-label">{{ field.label }}</label>
+    {{ field }}
+  </div>
+  {% endfor %}
+  <button class="btn btn-primary btn-block" type="submit">Guardar</button>
+</form>
+<p style="margin-top:1.25rem;text-align:center;">
+  <a class="btn btn-ghost btn-sm" href="{% url 'accounts:logout' %}">Cerrar sesión</a>
+</p>
+{% endblock %}

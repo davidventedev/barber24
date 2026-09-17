@@ -1,0 +1,15 @@
+{% if shop %}
+<nav class="settings-tabs">
+  <a href="{% url 'dashboard:settings_general' %}" class="{% if settings_tab == 'general' %}active{% endif %}">General</a>
+  <a href="{% url 'dashboard:settings_catalog' %}" class="{% if settings_tab == 'catalog' %}active{% endif %}">Catálogo</a>
+  <a href="{% url 'dashboard:settings_branches' %}" class="{% if settings_tab == 'branches' %}active{% endif %}">Sucursales</a>
+  <a href="{% url 'dashboard:settings_barbers' %}" class="{% if settings_tab == 'barbers' %}active{% endif %}">Barberos</a>
+  <a href="{% url 'dashboard:settings_form' %}" class="{% if settings_tab == 'form' %}active{% endif %}">Formulario</a>
+</nav>
+{% if shop.slug %}
+<p class="form-hint" style="margin-bottom:1rem;">
+  Link de reservas:
+  <a href="{% url 'public_booking' shop.slug %}" target="_blank">/b/{{ shop.slug }}/</a>
+</p>
+{% endif %}
+{% endif %}

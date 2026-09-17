@@ -1,0 +1,25 @@
+{% extends "base_app.html" %}
+{% block title %}Usuarios — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header"><h1>Usuarios</h1></header>
+<div class="panel">
+  {% for u in users %}
+  <div class="list-row">
+    <div>
+      <strong>{{ u.full_name }}</strong>
+      <div style="font-size:0.85rem;color:var(--text-muted);">
+        {{ u.email }} · {{ u.get_role_display }}
+        {% if u.shop %} · {{ u.shop.name }}{% endif %}
+        {% if not u.is_active %} · Inactivo{% endif %}
+      </div>
+    </div>
+    {% if u != request.user %}
+    <form method="post" action="{% url 'dashboard:superadmin_user_toggle' u.pk %}">
+      {% csrf_token %}
+      <button class="btn btn-ghost btn-sm" type="submit">{% if u.is_active %}Desactivar{% else %}Activar{% endif %}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

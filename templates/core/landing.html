@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ BRAND_NAME }} — Reservas para barberías{% endblock %}
+{% block body_class %}landing no-nav-pad{% endblock %}
+{% block body %}
+<div class="container">
+  <nav class="landing-nav">
+    <img class="brand-img" src="{% static 'img/logo.svg' %}" alt="Barber24">
+    <div style="display:flex;gap:0.5rem;">
+      {% if user.is_authenticated %}
+        <a class="btn btn-primary btn-sm" href="{% url 'dashboard:home' %}">Ir al panel</a>
+      {% else %}
+        <a class="btn btn-ghost btn-sm" href="{% url 'accounts:login' %}">Ingresar</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-brand">Barber<span>24</span></div>
+    <p>La plataforma para barberías que quieren llenar la agenda, cuidar a sus clientes y crecer sin complicaciones.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="{% url 'accounts:login' %}">Empezar ahora</a>
+      <a class="btn btn-ghost" href="#features">Ver cómo funciona</a>
+    </div>
+  </section>
+</div>
+
+<section class="section" id="features">
+  <div class="container">
+    <h2>Todo lo que tu barbería necesita</h2>
+    <p>Multitienda, roles claros y reservas que llegan directo a WhatsApp.</p>
+    <div class="feature-grid">
+      <article class="feature">
+        <h3>Reservas por WhatsApp</h3>
+        <p>Cada sucursal tiene su número. El cliente reserva y confirma en un toque.</p>
+      </article>
+      <article class="feature">
+        <h3>Agenda del barbero</h3>
+        <p>Calendario, clientes y métricas de trabajos en una interfaz pensada para el celular.</p>
+      </article>
+      <article class="feature">
+        <h3>Control del dueño</h3>
+        <p>Catálogo, sucursales, barberos y personalización del formulario de reserva.</p>
+      </article>
+      <article class="feature">
+        <h3>Clientes con Google</h3>
+        <p>Login rápido e historial de turnos en un solo lugar.</p>
+      </article>
+      <article class="feature">
+        <h3>Link propio</h3>
+        <p>Cada barbería tiene su URL pública lista para compartir en redes.</p>
+      </article>
+      <article class="feature">
+        <h3>PWA</h3>
+        <p>Instalable en el teléfono, rápida y con look de app nativa.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<footer class="landing-footer">
+  <div class="container">© {% now "Y" %} Barber24 · Hecho para barberías modernas</div>
+</footer>
+{% endblock %}

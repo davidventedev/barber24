@@ -1,0 +1,36 @@
+Antes de escribir una sola línea de código, estos son los seis documentos que debes de tener antes de hacer by coding y cualquier desarrollo de IA para empresas.
+
+El primero es el documento de requerimientos del producto o PRD.
+
+Este documento contiene todas las funcionabilidades exactas de lo que estás construyendo.
+
+También incluye una visión general breve de la idea completa del app.
+
+El siguiente es el documento de requerimientos técnicos o TRD.
+
+Aquí se define todas las decisiones técnicas: qué stack vas a utilizar, qué herramientas vas a construir, todo, ¿ok?
+
+Básicamente, es el blueprint que tu agente de IA necesita para que tome decisiones técnicas sin tener que adivinar.
+
+El siguiente documento es el diseño UI UX.
+
+Este cubre la apariencia y experiencia de tu app: pantallas, componentes, navegación visual, estilo, estructura y cómo debería sentirse el producto para el usuario.
+
+Y el siguiente es el flujo del app. Este muestra exactamente cómo funciona el recorrido del usuario, qué pasa cuando se hace clic en un botón, a qué pantalla va, qué acción sigue y cómo se conecta cada parte de la aplicación.
+
+El siguiente es el backend schema. Aquí se define cómo se almacena y organiza la data.
+
+Incluye usuarios, autenticación, tablas, columnas, relaciones y toda la lógica necesaria para que tu app funcione correctamente por detrás.
+
+Y este último es el plan de implementación.
+
+Este contiene la secuencia exacta de construcción paso a paso para que la IA sepa en qué orden debe construir tu app sin improvisar.
+
+Puedes utilizar Claude o ChatGPT para redactar todos estos documentos.
+
+Todos estos documentos ayudan a que tu agente de IA entienda mucho mejor tu aplicación.
+
+Y si quieres entender cómo funciona cada uno de ellos, comenta la palabra doc y te envío el acceso a mi entrenamiento gratuito donde te explico todo esto paso a paso.
+
+[efecto sonoro]
+

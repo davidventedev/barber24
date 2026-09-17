@@ -1,0 +1,24 @@
+{% extends "base_app.html" %}
+{% block title %}Formulario de reserva — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+{% include "partials/settings_tabs.html" %}
+<header class="page-header">
+  <h1>Formulario</h1>
+  <p>Personalizá textos y campos del link público de reservas.</p>
+</header>
+<form method="post" class="panel">
+  {% csrf_token %}
+  {% for field in form %}
+  <div class="form-group" {% if field.field.widget.input_type == 'checkbox' %}style="display:flex;align-items:center;gap:0.6rem;"{% endif %}>
+    {% if field.field.widget.input_type == 'checkbox' %}
+      {{ field }}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% else %}
+      <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+    {% endif %}
+  </div>
+  {% endfor %}
+  <button class="btn btn-primary btn-block" type="submit">Guardar</button>
+</form>
+{% endblock %}

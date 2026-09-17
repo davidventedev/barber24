@@ -1,0 +1,53 @@
+{% extends "base_app.html" %}
+{% block title %}Panel dueño — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="eyebrow">{{ shop.name }}</div>
+  <h1>Resumen</h1>
+  <p><a href="{% url 'public_booking' shop.slug %}" target="_blank">Link de reservas →</a></p>
+</header>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">Próximas</div><div class="value">{{ metrics.upcoming }}</div></div>
+  <div class="stat-card"><div class="label">Mes</div><div class="value">{{ metrics.month_count }}</div></div>
+  <div class="stat-card"><div class="label">Completadas</div><div class="value">{{ metrics.completed }}</div></div>
+  <div class="stat-card"><div class="label">Ingresos mes</div><div class="value">${{ metrics.month_revenue|floatformat:0 }}</div></div>
+</div>
+
+<section style="margin-top:1.5rem;">
+  <h2>Barberos</h2>
+  <div class="panel">
+    {% for b in barber_stats %}
+    <div class="list-row">
+      <div>
+        <strong>{{ b.user.full_name }}</strong>
+        <div style="font-size:0.85rem;color:var(--text-muted);">{{ b.completed }} completados · {{ b.appt_count }} totales</div>
+      </div>
+    </div>
+    {% empty %}
+    <p class="empty-state">Todavía no hay barberos. <a href="{% url 'dashboard:barber_create' %}">Agregar uno</a></p>
+    {% endfor %}
+  </div>
+</section>
+
+<section style="margin-top:1.5rem;">
+  <h2>Últimas reservas</h2>
+  <div class="panel">
+    {% for a in recent %}
+    <div class="list-row">
+      <div>
+        <strong>{{ a.guest_name }}</strong>
+        <div style="font-size:0.85rem;color:var(--text-muted);">
+          {{ a.service.name }}
+          {% if a.barber %}· {{ a.barber.user.full_name }}{% endif %}
+          · {{ a.starts_at|date:"d/m H:i" }}
+        </div>
+      </div>
+      <span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span>
+    </div>
+    {% empty %}
+    <div class="empty-state">Sin reservas aún</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+{% load socialaccount %}
+{% block title %}Ingresar — {{ BRAND_NAME }}{% endblock %}
+{% block body_class %}no-nav-pad{% endblock %}
+{% block body %}
+<div class="login-page">
+  <div class="login-card">
+    <img class="login-logo" src="{% static 'img/logo.svg' %}" alt="Barber24">
+    <h1>Bienvenido</h1>
+    <p class="sub">Ingresá para gestionar tu barbería</p>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="form-error" style="margin-bottom:1rem;">{{ form.non_field_errors|striptags }}</div>
+      {% endif %}
+      <div class="form-group" style="text-align:left;">
+        <label class="form-label" for="id_username">Email</label>
+        {{ form.username }}
+      </div>
+      <div class="form-group" style="text-align:left;">
+        <label class="form-label" for="id_password">Contraseña</label>
+        {{ form.password }}
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
+    </form>
+
+    <div class="divider">o</div>
+    <div class="login-actions">
+      <a class="btn btn-ghost btn-block" href="{% provider_login_url 'google' %}">Continuar con Google</a>
+      <p style="margin-top:1.25rem;font-size:0.85rem;">
+        <a href="{% url 'core:landing' %}" style="color:var(--text-muted);">← Volver al inicio</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

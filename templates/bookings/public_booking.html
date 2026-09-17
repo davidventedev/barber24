@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ cfg.title }} — {{ shop.name }}{% endblock %}
+{% block body_class %}no-nav-pad{% endblock %}
+{% block body %}
+<div class="booking-hero">
+  <div class="container-sm">
+    <div class="eyebrow" style="color:var(--primary);letter-spacing:.1em;text-transform:uppercase;font-size:.75rem;">{{ shop.name }}</div>
+    <h1>{{ cfg.title }}</h1>
+    {% if cfg.subtitle %}<p>{{ cfg.subtitle }}</p>{% endif %}
+  </div>
+</div>
+
+<div class="container-sm" style="padding-bottom:2.5rem;">
+  {% if error %}<div class="form-error" style="margin-bottom:1rem;">{{ error }}</div>{% endif %}
+
+  <form method="post" class="panel">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" name="guest_name" required value="{{ initial.guest_name }}" placeholder="Tu nombre">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Teléfono {% if cfg.require_phone %}*{% endif %}</label>
+      <input class="form-input" name="guest_phone" {% if cfg.require_phone %}required{% endif %} value="{{ initial.guest_phone }}" placeholder="11 1234 5678">
+    </div>
+    {% if cfg.show_email %}
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" name="guest_email" value="{{ initial.guest_email }}">
+    </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label class="form-label">Sucursal</label>
+      <select class="form-input" name="branch" required>
+        <option value="">Elegí sucursal</option>
+        {% for b in branches %}
+        <option value="{{ b.pk }}">{{ b.name }}{% if b.city %} — {{ b.city }}{% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Servicio</label>
+      <select class="form-input" name="service" required>
+        <option value="">Elegí servicio</option>
+        {% for s in services %}
+        <option value="{{ s.pk }}">{{ s.name }} · {{ s.duration_min }}' · ${{ s.price }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {% if cfg.show_barber %}
+    <div class="form-group">
+      <label class="form-label">Barbero (opcional)</label>
+      <select class="form-input" name="barber">
+        <option value="">Sin preferencia</option>
+        {% for b in barbers %}
+        <option value="{{ b.pk }}">{{ b.user.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input class="form-input" type="date" name="date" required min="{{ min_date }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Hora</label>
+      <input class="form-input" type="time" name="time" required>
+    </div>
+
+    {% if cfg.show_notes %}
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea class="form-input" name="notes" rows="2" placeholder="Algo que debamos saber..."></textarea>
+    </div>
+    {% endif %}
+
+    <button class="btn btn-primary btn-block" type="submit">{{ cfg.cta_label }}</button>
+    <p class="form-hint" style="text-align:center;margin-top:0.85rem;">{{ cfg.success_message }}</p>
+  </form>
+
+  <p style="text-align:center;margin-top:1.25rem;font-size:0.85rem;">
+    {% if user.is_authenticated %}
+      <a href="{% url 'bookings:my_bookings' %}">Ver mis reservas</a>
+    {% else %}
+      <a href="{% url 'accounts:login' %}?next={{ request.path }}">Ingresá con Google</a> para guardar tu historial
+    {% endif %}
+  </p>
+</div>
+{% endblock %}

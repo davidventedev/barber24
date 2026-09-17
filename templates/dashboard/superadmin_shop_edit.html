@@ -1,0 +1,39 @@
+{% extends "base_app.html" %}
+{% block title %}Editar tienda — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <h1>{{ shop.name }}</h1>
+  <p><a href="{% url 'public_booking' shop.slug %}" target="_blank">/b/{{ shop.slug }}/</a></p>
+</header>
+<form method="post" style="margin-bottom:1rem;">
+  {% csrf_token %}
+  <button class="btn {% if shop.is_active %}btn-danger{% else %}btn-primary{% endif %} btn-sm" name="toggle_active" value="1" type="submit">
+    {% if shop.is_active %}Desactivar{% else %}Activar{% endif %} tienda
+  </button>
+</form>
+<form method="post" enctype="multipart/form-data" class="panel">
+  {% csrf_token %}
+  {% for field in form %}
+  <div class="form-group">
+    <label class="form-label">{{ field.label }}</label>
+    {{ field }}
+  </div>
+  {% endfor %}
+  <button class="btn btn-primary btn-block" type="submit">Guardar</button>
+</form>
+<section style="margin-top:1.5rem;">
+  <h2>Miembros</h2>
+  <div class="panel">
+    {% for m in members %}
+    <div class="list-row">
+      <div>
+        <strong>{{ m.full_name }}</strong>
+        <div style="font-size:0.85rem;color:var(--text-muted);">{{ m.email }} · {{ m.get_role_display }}</div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">Sin miembros</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

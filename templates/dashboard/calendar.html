@@ -1,0 +1,44 @@
+{% extends "base_app.html" %}
+{% block title %}Calendario — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="eyebrow">Agenda</div>
+  <h1>Calendario</h1>
+</header>
+
+<div class="cal-nav">
+  <a class="btn btn-ghost btn-sm" href="?w={{ prev_w }}">← Ant.</a>
+  <strong>{{ start|date:"d M" }} — {{ end|date:"d M Y" }}</strong>
+  <a class="btn btn-ghost btn-sm" href="?w={{ next_w }}">Sig. →</a>
+</div>
+
+<div class="cal-week">
+{% for day in days %}
+  <div class="cal-day">
+    <div class="cal-day-title">
+      <span>{{ day.date|date:"D" }}</span>
+      <span>{{ day.date|date:"d/m" }}</span>
+    </div>
+    {% for a in day.items %}
+    <div class="cal-item" style="border-left-color:{% if a.barber %}{{ a.barber.calendar_color }}{% else %}var(--primary){% endif %}">
+      <div class="time">{{ a.starts_at|date:"H:i" }}</div>
+      <div>
+        <strong>{{ a.guest_name }}</strong>
+        <div style="font-size:0.8rem;color:var(--text-muted);">{{ a.service.name }}</div>
+      </div>
+      <form method="post" action="{% url 'dashboard:appointment_status' a.pk %}">
+        {% csrf_token %}
+        <select name="status" class="form-input" style="padding:0.35rem;min-height:auto;font-size:0.75rem;" onchange="this.form.submit()">
+          {% for val, label in status_choices %}
+          <option value="{{ val }}" {% if a.status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+    {% empty %}
+    <div class="cal-empty">Libre</div>
+    {% endfor %}
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

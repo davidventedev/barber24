@@ -1,0 +1,22 @@
+{% extends "base_app.html" %}
+{% block title %}Catálogo — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+{% include "partials/settings_tabs.html" %}
+<header class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+  <h1>Catálogo</h1>
+  <a class="btn btn-primary btn-sm" href="{% url 'dashboard:service_create' %}">+ Servicio</a>
+</header>
+<div class="panel">
+  {% for s in services %}
+  <div class="list-row">
+    <div>
+      <strong>{{ s.name }}</strong>
+      <div style="font-size:0.85rem;color:var(--text-muted);">{{ s.duration_min }} min · ${{ s.price }} {% if not s.is_active %}· Inactivo{% endif %}</div>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:service_edit' s.pk %}">Editar</a>
+  </div>
+  {% empty %}
+  <div class="empty-state">Sin servicios. Creá el primero.</div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base_app.html" %}
+{% block title %}Métricas — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="eyebrow">Performance</div>
+  <h1>Métricas</h1>
+</header>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">Total reservas</div><div class="value">{{ metrics.total }}</div></div>
+  <div class="stat-card"><div class="label">Completadas</div><div class="value">{{ metrics.completed }}</div></div>
+  <div class="stat-card"><div class="label">Canceladas</div><div class="value">{{ metrics.cancelled }}</div></div>
+  <div class="stat-card"><div class="label">Ingresos</div><div class="value">${{ metrics.revenue|floatformat:0 }}</div></div>
+</div>
+
+<section style="margin-top:1.5rem;">
+  <h2>Últimos 14 días</h2>
+  <div class="panel">
+    {% if daily %}
+    <div class="chart-bars">
+      {% for d in daily %}
+      <div class="bar" style="height:{% widthratio d.c 10 100 %}%;" title="{{ d.day }}: {{ d.c }}"></div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">Sin datos en el período</div>
+    {% endif %}
+  </div>
+</section>
+
+<section style="margin-top:1.5rem;">
+  <h2>Por servicio</h2>
+  <div class="panel">
+    {% for s in by_service %}
+    <div class="list-row">
+      <span>{{ s.service__name }}</span>
+      <strong style="color:var(--primary);">{{ s.c }}</strong>
+    </div>
+    {% empty %}
+    <div class="empty-state">Sin datos</div>
+    {% endfor %}
+  </div>
+</section>
+
+{% if barber_breakdown %}
+<section style="margin-top:1.5rem;">
+  <h2>Por barbero</h2>
+  <div class="panel">
+    {% for b in barber_breakdown %}
+    <div class="list-row">
+      <span>{{ b.user.full_name }}</span>
+      <span style="color:var(--text-muted);">{{ b.done }}/{{ b.total }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

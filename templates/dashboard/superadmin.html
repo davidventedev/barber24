@@ -1,0 +1,37 @@
+{% extends "base_app.html" %}
+{% block title %}Superadmin — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="eyebrow">Plataforma</div>
+  <h1>Superadmin</h1>
+</header>
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">Tiendas</div><div class="value">{{ stats.shops }}</div></div>
+  <div class="stat-card"><div class="label">Activas</div><div class="value">{{ stats.active_shops }}</div></div>
+  <div class="stat-card"><div class="label">Usuarios</div><div class="value">{{ stats.users }}</div></div>
+  <div class="stat-card"><div class="label">Reservas</div><div class="value">{{ stats.appointments }}</div></div>
+</div>
+
+<section style="margin-top:1.5rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h2>Tiendas</h2>
+    <a class="btn btn-primary btn-sm" href="{% url 'dashboard:superadmin_shop_create' %}">+ Tienda</a>
+  </div>
+  <div class="panel">
+    {% for s in shops %}
+    <div class="list-row">
+      <div>
+        <strong>{{ s.name }}</strong>
+        <div style="font-size:0.85rem;color:var(--text-muted);">
+          /b/{{ s.slug }}/ · {{ s.member_count }} users · {{ s.appt_count }} reservas
+          {% if not s.is_active %} · Inactiva{% endif %}
+        </div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:superadmin_shop_edit' s.pk %}">Editar</a>
+    </div>
+    {% empty %}
+    <div class="empty-state">Sin tiendas</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

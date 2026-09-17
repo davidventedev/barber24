@@ -1,0 +1,26 @@
+{% extends "base_app.html" %}
+{% block title %}Mis reservas — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="eyebrow">Cliente</div>
+  <h1>Mis reservas</h1>
+</header>
+<div class="panel">
+  {% for a in appointments %}
+  <div class="list-row">
+    <div>
+      <strong>{{ a.shop.name }}</strong>
+      <div style="font-size:0.85rem;color:var(--text-muted);">
+        {{ a.service.name }} · {{ a.branch.name }} · {{ a.starts_at|date:"d/m/Y H:i" }}
+      </div>
+    </div>
+    <span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <div class="icon">✂</div>
+    Aún no tenés reservas
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

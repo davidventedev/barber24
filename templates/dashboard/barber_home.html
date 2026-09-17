@@ -1,0 +1,32 @@
+{% extends "base_app.html" %}
+{% block title %}Inicio — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="eyebrow">Hola, {{ user.first_name|default:user.full_name }}</div>
+  <h1>Tu agenda</h1>
+</header>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">Próximas</div><div class="value">{{ metrics.upcoming }}</div></div>
+  <div class="stat-card"><div class="label">Este mes</div><div class="value">{{ metrics.month_count }}</div></div>
+  <div class="stat-card"><div class="label">Completadas</div><div class="value">{{ metrics.completed }}</div></div>
+  <div class="stat-card"><div class="label">Ingresos</div><div class="value">${{ metrics.month_revenue|floatformat:0 }}</div></div>
+</div>
+
+<section style="margin-top:1.5rem;">
+  <h2>Próximos turnos</h2>
+  <div class="panel">
+    {% for a in upcoming %}
+    <div class="list-row">
+      <div>
+        <strong>{{ a.guest_name }}</strong>
+        <div style="font-size:0.85rem;color:var(--text-muted);">{{ a.service.name }} · {{ a.starts_at|date:"D d/m H:i" }}</div>
+      </div>
+      <span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span>
+    </div>
+    {% empty %}
+    <div class="empty-state"><div class="icon">✂</div>No hay turnos próximos</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
