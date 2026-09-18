@@ -11,6 +11,8 @@
   --text-muted: #9a9a9a;
   --text-dim: #6b6b6b;
   --primary: #EAC452;
+  --system-nav-color: #0a0a0a;
+  --system-nav-rgb: 10, 10, 10;
   --primary-hover: #f0d06e;
   --primary-pressed: #c9a23a;
   --primary-soft: rgba(234, 196, 82, 0.12);
@@ -194,7 +196,7 @@ p { margin: 0 0 1rem; color: var(--text-muted); }
   left: 0; right: 0; bottom: 0;
   height: calc(var(--nav-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
-  background: rgba(10,10,10,0.92);
+  background: rgba(var(--system-nav-rgb), 0.92);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
   display: grid;
