@@ -28,16 +28,7 @@
   --font: "DM Sans", system-ui, sans-serif;
   --display: "Bebas Neue", "Arial Narrow", sans-serif;
   --nav-h: 64px;
-  --gcal-nav-gap: 12px;
-  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --bottom-clearance: calc(var(--nav-h) + var(--safe-bottom) + var(--gcal-nav-gap));
-}
-@supports (padding: max(0px)) {
-  :root {
-    --safe-top: max(env(safe-area-inset-top, 0px), constant(safe-area-inset-top, 0px));
-    --safe-bottom: max(env(safe-area-inset-bottom, 0px), constant(safe-area-inset-bottom, 0px));
-  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -79,7 +70,6 @@ p { margin: 0 0 1rem; color: var(--text-muted); }
   padding-bottom: 1.5rem;
 }
 .app-main.gcal-page {
-  padding-top: 0.35rem;
   padding-bottom: 0;
 }
 .container {
@@ -455,32 +445,20 @@ p { margin: 0 0 1rem; color: var(--text-muted); }
 }
 
 /* Google Calendar–style agenda */
-html:has(.gcal-page) {
-  height: 100%;
-  height: 100dvh;
-  overflow: hidden;
-}
 body:has(.gcal-page) {
   overflow: hidden;
-  height: 100%;
+  /* svh avoids mobile browser chrome making the grid sit under the nav */
+  height: 100vh;
   height: 100dvh;
-  max-height: none;
-  box-sizing: border-box;
-  /* black-translucent PWA draws under the status bar */
-  padding-top: var(--safe-top);
-  display: flex;
-  flex-direction: column;
+  max-height: 100svh;
 }
 .app-shell:has(.gcal-page) {
-  flex: 1 1 auto;
-  height: auto;
+  height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-  /* Nav + home indicator + small breathing room above the toolbar */
-  padding-bottom: var(--bottom-clearance);
 }
 .gcal-page {
   width: min(1200px, 100% - 1rem);
@@ -1098,10 +1076,8 @@ body:has(.gcal-page) {
 
 @media (min-width: 768px) {
   body:has(.gcal-page) {
-    padding-top: 0;
-  }
-  .app-shell:has(.gcal-page) {
-    padding-bottom: 0;
+    max-height: none;
+    height: 100dvh;
   }
   .gcal-page {
     width: min(1200px, 100% - 2rem);
