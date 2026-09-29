@@ -2,41 +2,71 @@
 {% block title %}Agenda — {{ BRAND_NAME }}{% endblock %}
 {% block main_class %}container gcal-page{% endblock %}
 {% block content %}
-<div class="gcal">
+<div
+  class="gcal"
+  data-gcal
+  data-view="{{ view_mode }}"
+  data-prev-day="?w={{ prev_day_w }}&view=day&d={{ prev_day_d }}{{ barber_q }}"
+  data-next-day="?w={{ next_day_w }}&view=day&d={{ next_day_d }}{{ barber_q }}"
+>
   <header class="gcal-toolbar">
-    <div class="gcal-toolbar-left">
-      <a class="btn btn-ghost btn-sm gcal-today" href="?view={{ view_mode }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}">Hoy</a>
-      <div class="gcal-nav-arrows">
-        <a class="gcal-arrow" href="?w={{ prev_w }}&view={{ view_mode }}&d={{ day_index }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}" aria-label="Anterior">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        </a>
-        <a class="gcal-arrow" href="?w={{ next_w }}&view={{ view_mode }}&d={{ day_index }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}" aria-label="Siguiente">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </a>
+    {% if selected_barber %}
+    <div class="gcal-barber">
+      <div class="gcal-barber-avatar" aria-hidden="true">
+        {% if selected_barber.photo %}
+        <img src="{{ selected_barber.photo.url }}" alt="">
+        {% else %}
+        <span>{{ selected_barber.user.full_name|slice:":1"|upper }}</span>
+        {% endif %}
       </div>
-      <h1 class="gcal-title">{{ month_label }}</h1>
-    </div>
-    <div class="gcal-toolbar-right">
       {% if show_barber_select %}
       <label class="gcal-barber-select">
         <span class="sr-only">Barbero</span>
         <select class="form-input" onchange="location.href=this.value">
           {% for b in barbers %}
-          <option value="?w={{ week_offset }}&view={{ view_mode }}&d={{ day_index }}&barber={{ b.pk }}" {% if selected_barber and selected_barber.pk == b.pk %}selected{% endif %}>
+          <option value="?w={{ week_offset }}&view={{ view_mode }}&d={{ day_index }}&barber={{ b.pk }}" {% if selected_barber.pk == b.pk %}selected{% endif %}>
             {{ b.user.full_name }}
           </option>
           {% endfor %}
         </select>
       </label>
+      {% else %}
+      <span class="gcal-barber-name">{{ selected_barber.user.full_name }}</span>
       {% endif %}
-      <div class="gcal-view-switch" role="tablist">
-        <a href="?w={{ week_offset }}&view=day&d={{ day_index }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}" class="{% if view_mode == 'day' %}active{% endif %}" role="tab">Día</a>
-        <a href="?w={{ week_offset }}&view=week&d={{ day_index }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}" class="{% if view_mode == 'week' %}active{% endif %}" role="tab">Semana</a>
+    </div>
+    {% endif %}
+    <div class="gcal-toolbar-controls">
+      <div class="gcal-toolbar-left">
+        <a class="btn btn-ghost btn-sm gcal-today" href="?view={{ view_mode }}{{ barber_q }}">Hoy</a>
+        <div class="gcal-nav-arrows">
+          {% if view_mode == 'day' %}
+          <a class="gcal-arrow" href="?w={{ prev_day_w }}&view=day&d={{ prev_day_d }}{{ barber_q }}" aria-label="Día anterior">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </a>
+          <a class="gcal-arrow" href="?w={{ next_day_w }}&view=day&d={{ next_day_d }}{{ barber_q }}" aria-label="Día siguiente">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          {% else %}
+          <a class="gcal-arrow" href="?w={{ prev_w }}&view={{ view_mode }}&d={{ day_index }}{{ barber_q }}" aria-label="Anterior">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </a>
+          <a class="gcal-arrow" href="?w={{ next_w }}&view={{ view_mode }}&d={{ day_index }}{{ barber_q }}" aria-label="Siguiente">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          {% endif %}
+        </div>
+        <h1 class="gcal-title">{{ month_label }}</h1>
+      </div>
+      <div class="gcal-toolbar-right">
+        <div class="gcal-view-switch" role="tablist">
+          <a href="?w={{ week_offset }}&view=day&d={{ day_index }}{{ barber_q }}" class="{% if view_mode == 'day' %}active{% endif %}" role="tab">Día</a>
+          <a href="?w={{ week_offset }}&view=week&d={{ day_index }}{{ barber_q }}" class="{% if view_mode == 'week' %}active{% endif %}" role="tab">Semana</a>
+        </div>
       </div>
     </div>
   </header>
 
-  <div class="gcal-board">
+  <div class="gcal-board" data-gcal-swipe>
     <div class="gcal-scroll" id="gcal-scroll">
       <div class="gcal-grid {% if view_mode == 'day' %}gcal-grid-day{% endif %}" style="--gcal-hour: {{ px_per_hour }}px; --gcal-cols: {% if view_mode == 'day' %}1{% else %}7{% endif %};">
         <div class="gcal-corner"></div>
@@ -113,6 +143,21 @@
 {% block extra_js %}
 <script>
 (function () {
+  const MOBILE_MAX = 768;
+  const root = document.querySelector('[data-gcal]');
+  const isMobile = () => window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches;
+
+  // On small screens, lock to day view and drop the week switch.
+  if (root && isMobile()) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') !== 'day') {
+      params.set('view', 'day');
+      if (!params.has('d')) params.set('d', String({{ day_index }}));
+      window.location.replace(`${window.location.pathname}?${params.toString()}`);
+      return;
+    }
+  }
+
   const scrollEl = document.getElementById('gcal-scroll');
   const nowLine = document.querySelector('[data-now]');
   const openTop = {{ open_top|default:0 }};
@@ -149,6 +194,49 @@
   });
 
   document.addEventListener('click', closeAll);
+
+  // Mobile: horizontal swipe changes day.
+  const swipeEl = document.querySelector('[data-gcal-swipe]');
+  if (!root || !swipeEl) return;
+
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+  let locked = false;
+  const THRESHOLD = 56;
+
+  swipeEl.addEventListener('touchstart', (e) => {
+    if (!isMobile() || root.dataset.view !== 'day') return;
+    const t = e.changedTouches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    tracking = true;
+    locked = false;
+  }, { passive: true });
+
+  swipeEl.addEventListener('touchmove', (e) => {
+    if (!tracking || locked) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      locked = true;
+    } else if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) {
+      tracking = false;
+    }
+  }, { passive: true });
+
+  swipeEl.addEventListener('touchend', (e) => {
+    if (!tracking) return;
+    tracking = false;
+    if (!isMobile() || root.dataset.view !== 'day') return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if (Math.abs(dx) < THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+    const url = dx < 0 ? root.dataset.nextDay : root.dataset.prevDay;
+    if (url) window.location.href = url;
+  }, { passive: true });
 })();
 </script>
 {% endblock %}

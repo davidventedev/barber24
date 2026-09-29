@@ -306,6 +306,19 @@ def calendar_view(request):
     if start.month != (end - timedelta(days=1)).month:
         month_label = f'{start.strftime("%b").capitalize()} – {(end - timedelta(days=1)).strftime("%b %Y").capitalize()}'
 
+    def _shift_day(delta):
+        idx = day_index + delta
+        w = week_offset
+        if idx < 0:
+            return w - 1, 6
+        if idx > 6:
+            return w + 1, 0
+        return w, idx
+
+    prev_day_w, prev_day_d = _shift_day(-1)
+    next_day_w, next_day_d = _shift_day(1)
+    barber_q = f'&barber={selected_barber.pk}' if selected_barber else ''
+
     return render(request, 'dashboard/calendar.html', {
         'days': days,
         'selected_day': selected_day,
@@ -315,6 +328,11 @@ def calendar_view(request):
         'week_offset': week_offset,
         'prev_w': week_offset - 1,
         'next_w': week_offset + 1,
+        'prev_day_w': prev_day_w,
+        'prev_day_d': prev_day_d,
+        'next_day_w': next_day_w,
+        'next_day_d': next_day_d,
+        'barber_q': barber_q,
         'view_mode': view_mode,
         'day_index': day_index,
         'hours': hours,
