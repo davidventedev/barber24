@@ -43,7 +43,7 @@ Link de reservas demo: http://127.0.0.1:8000/b/demo-cuts/
 ## Roles
 - **Cliente** — historial de reservas (login Google)
 - **Barbero** — calendario, clientes, métricas, perfil
-- **Dueño** — métricas globales + config (General, Catálogo, Sucursales, Barberos, Formulario)
+- **Dueño** — métricas globales + config (General, Catálogo, Establecimientos, Barberos, Formulario)
 - **Superadmin** — todas las tiendas y usuarios
 
 ## Paleta

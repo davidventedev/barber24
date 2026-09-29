@@ -10,7 +10,7 @@
 - is_active, created_at
 - booking_form_config (JSON: fields visibility/labels)
 
-## Branch (Sucursal)
+## Establishment (Establecimiento)
 - shop FK, name, address, city
 - whatsapp_number, is_active
 
@@ -20,13 +20,13 @@
 
 ## BarberProfile
 - user FK, shop FK, bio, specialties
-- branch FK nullable, is_active, color_calendar
+- establishment FK nullable, is_active, color_calendar
 
 ## ClientProfile
 - user FK, notes
 
 ## Appointment
-- shop, branch, barber, client (nullable), service
+- shop, establishment, barber, client (nullable), service
 - guest_name, guest_phone, guest_email
 - starts_at, ends_at, status [pending|confirmed|completed|cancelled|no_show]
 - notes, source [web|manual]

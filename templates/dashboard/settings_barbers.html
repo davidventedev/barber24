@@ -9,12 +9,22 @@
 <div class="panel">
   {% for b in barbers %}
   <div class="list-row">
-    <div>
-      <strong>{{ b.user.full_name }}</strong>
-      <div style="font-size:0.85rem;color:var(--text-muted);">
-        {{ b.user.email }}
-        {% if b.branch %} · {{ b.branch.name }}{% endif %}
-        {% if not b.is_active %} · Inactivo{% endif %}
+    <div class="barber-list-main">
+      <div class="barber-avatar">
+        {% if b.photo %}
+        <img src="{{ b.photo.url }}" alt="{{ b.user.full_name }}">
+        {% else %}
+        <span>{{ b.user.full_name|slice:":1"|upper }}</span>
+        {% endif %}
+      </div>
+      <div>
+        <strong>{{ b.user.full_name }}</strong>
+        <div style="font-size:0.85rem;color:var(--text-muted);">
+          {{ b.user.email }}
+          {% if b.establishment %} · {{ b.establishment.name }}{% endif %}
+          {% if not b.is_active %} · Inactivo{% endif %}
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.25rem;">{{ b.schedule_summary }}</div>
       </div>
     </div>
     <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:barber_edit' b.pk %}">Editar</a>

@@ -86,13 +86,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 _database_url = os.getenv('DATABASE_URL')
 if _database_url:
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=_database_url,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
+    _db = dj_database_url.config(
+        default=_database_url,
+        conn_max_age=600,
+        conn_health_checks=True,
+        ssl_require=os.getenv('DATABASE_SSL', '').lower() in ('1', 'true', 'yes')
+        or 'supabase.co' in _database_url,
+    )
+    DATABASES = {'default': _db}
 else:
     DATABASES = {
         'default': {
@@ -116,17 +117,59 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STORAGES = {
-    'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
-    },
-    'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
-    },
-}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Supabase Storage (S3-compatible). If endpoint + keys are set, media goes to the bucket.
+SUPABASE_S3_ENDPOINT_URL = os.getenv('SUPABASE_S3_ENDPOINT_URL', '').rstrip('/')
+SUPABASE_S3_ACCESS_KEY = os.getenv('SUPABASE_S3_ACCESS_KEY', '')
+SUPABASE_S3_SECRET_KEY = os.getenv('SUPABASE_S3_SECRET_KEY', '')
+SUPABASE_STORAGE_BUCKET = os.getenv('SUPABASE_STORAGE_BUCKET', 'media')
+SUPABASE_S3_REGION = os.getenv('SUPABASE_S3_REGION', 'us-east-1')
+SUPABASE_S3_CUSTOM_DOMAIN = os.getenv('SUPABASE_S3_CUSTOM_DOMAIN', '').rstrip('/')
+
+USE_SUPABASE_STORAGE = bool(
+    SUPABASE_S3_ENDPOINT_URL and SUPABASE_S3_ACCESS_KEY and SUPABASE_S3_SECRET_KEY
+)
+
+if USE_SUPABASE_STORAGE:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                'access_key': SUPABASE_S3_ACCESS_KEY,
+                'secret_key': SUPABASE_S3_SECRET_KEY,
+                'bucket_name': SUPABASE_STORAGE_BUCKET,
+                'endpoint_url': SUPABASE_S3_ENDPOINT_URL,
+                'region_name': SUPABASE_S3_REGION,
+                'default_acl': None,
+                'querystring_auth': False,
+                'file_overwrite': False,
+                'location': 'uploads',
+                'addressing_style': 'path',
+                **(
+                    {'custom_domain': SUPABASE_S3_CUSTOM_DOMAIN}
+                    if SUPABASE_S3_CUSTOM_DOMAIN
+                    else {}
+                ),
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+        },
+    }
+    if SUPABASE_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f'https://{SUPABASE_S3_CUSTOM_DOMAIN}/uploads/'
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+        },
+    }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.User'

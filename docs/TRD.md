@@ -15,7 +15,7 @@ Soft multi-tenant: modelo `Barbershop` (tenant). Toda entidad operativa lleva `s
 | App | Responsabilidad |
 |-----|-----------------|
 | `accounts` | User custom, roles, perfiles |
-| `shops` | Tenant, sucursales, catálogo, config formulario |
+| `shops` | Tenant, establecimientos, catálogo, config formulario |
 | `bookings` | Reservas, calendario, WhatsApp deep-link |
 | `dashboard` | Vistas por rol |
 | `core` | Landing, PWA assets, utilidades |

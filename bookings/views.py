@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from shops.models import BarberProfile, Barbershop, Branch, Service
+from shops.models import BarberProfile, Barbershop, Establishment, Service
 
 from .models import Appointment
 
@@ -18,7 +18,7 @@ def _parse_starts_at(date_str, time_str):
 @require_http_methods(['GET', 'POST'])
 def public_booking(request, slug):
     shop = get_object_or_404(Barbershop, slug=slug, is_active=True)
-    branches = shop.branches.filter(is_active=True)
+    establishments = shop.establishments.filter(is_active=True)
     services = shop.services.filter(is_active=True)
     barbers = shop.barbers.filter(is_active=True).select_related('user')
     cfg = shop.form_config
@@ -29,7 +29,7 @@ def public_booking(request, slug):
         guest_phone = request.POST.get('guest_phone', '').strip()
         guest_email = request.POST.get('guest_email', '').strip()
         notes = request.POST.get('notes', '').strip()
-        branch_id = request.POST.get('branch')
+        establishment_id = request.POST.get('establishment')
         service_id = request.POST.get('service')
         barber_id = request.POST.get('barber') or None
         date_str = request.POST.get('date')
@@ -39,11 +39,11 @@ def public_booking(request, slug):
             error = 'Ingresá tu nombre.'
         elif cfg.get('require_phone') and not guest_phone:
             error = 'Ingresá tu teléfono.'
-        elif not branch_id or not service_id or not date_str or not time_str:
+        elif not establishment_id or not service_id or not date_str or not time_str:
             error = 'Completá todos los campos obligatorios.'
         else:
             try:
-                branch = branches.get(pk=branch_id)
+                establishment = establishments.get(pk=establishment_id)
                 service = services.get(pk=service_id)
                 barber = None
                 if barber_id and cfg.get('show_barber'):
@@ -57,7 +57,7 @@ def public_booking(request, slug):
 
                 appointment = Appointment.objects.create(
                     shop=shop,
-                    branch=branch,
+                    establishment=establishment,
                     barber=barber,
                     service=service,
                     client=client,
@@ -71,7 +71,7 @@ def public_booking(request, slug):
                     source=Appointment.Source.WEB,
                 )
                 return redirect(appointment.whatsapp_url())
-            except (Branch.DoesNotExist, Service.DoesNotExist, BarberProfile.DoesNotExist, ValueError):
+            except (Establishment.DoesNotExist, Service.DoesNotExist, BarberProfile.DoesNotExist, ValueError):
                 error = 'Datos inválidos. Revisá el formulario.'
 
     initial = {
@@ -86,7 +86,7 @@ def public_booking(request, slug):
 
     return render(request, 'bookings/public_booking.html', {
         'shop': shop,
-        'branches': branches,
+        'establishments': establishments,
         'services': services,
         'barbers': barbers,
         'cfg': cfg,
@@ -100,7 +100,7 @@ def public_booking(request, slug):
 def my_bookings(request):
     appointments = (
         Appointment.objects.filter(client=request.user)
-        .select_related('shop', 'branch', 'service', 'barber__user')
+        .select_related('shop', 'establishment', 'service', 'barber__user')
         .order_by('-starts_at')
     )
     return render(request, 'bookings/my_bookings.html', {'appointments': appointments})

@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from bookings.models import Appointment
-from shops.models import BarberProfile, Barbershop, Branch, Service
+from shops.models import BarberProfile, Barbershop, Establishment, Service
 
 User = get_user_model()
 
@@ -71,7 +71,7 @@ class Command(BaseCommand):
         barber_user.set_password('barbero123')
         barber_user.save()
 
-        branch, _ = Branch.objects.get_or_create(
+        establishment, _ = Establishment.objects.get_or_create(
             shop=shop,
             name='Palermo',
             defaults={
@@ -80,7 +80,7 @@ class Command(BaseCommand):
                 'whatsapp_number': '5491112345678',
             },
         )
-        Branch.objects.get_or_create(
+        Establishment.objects.get_or_create(
             shop=shop,
             name='Belgrano',
             defaults={
@@ -94,11 +94,26 @@ class Command(BaseCommand):
             user=barber_user,
             defaults={
                 'shop': shop,
-                'branch': branch,
+                'establishment': establishment,
                 'bio': 'Especialista en fades y barbas.',
                 'specialties': 'Fade, Barba, Diseño',
+                'work_hours': {
+                    str(d): {
+                        'off': d == 0,  # domingo franco
+                        'ranges': [{'open': '09:00', 'close': '20:00'}],
+                    }
+                    for d in range(7)
+                },
             },
         )
+        if not profile.work_hours:
+            profile.establishment = establishment
+            profile.ensure_work_hours()
+            profile.work_hours['0'] = {
+                'off': True,
+                'ranges': [{'open': '09:00', 'close': '20:00'}],
+            }
+            profile.save(update_fields=['establishment', 'work_hours'])
 
         services_data = [
             ('Corte clásico', 30, '8500'),
@@ -119,7 +134,7 @@ class Command(BaseCommand):
             now = timezone.now()
             Appointment.objects.create(
                 shop=shop,
-                branch=branch,
+                establishment=establishment,
                 barber=profile,
                 service=services[0],
                 guest_name='Juan Pérez',
@@ -130,7 +145,7 @@ class Command(BaseCommand):
             )
             Appointment.objects.create(
                 shop=shop,
-                branch=branch,
+                establishment=establishment,
                 barber=profile,
                 service=services[1],
                 guest_name='Carlos Gómez',
@@ -141,7 +156,7 @@ class Command(BaseCommand):
             )
             Appointment.objects.create(
                 shop=shop,
-                branch=branch,
+                establishment=establishment,
                 barber=profile,
                 service=services[0],
                 guest_name='Diego Ruiz',

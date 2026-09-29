@@ -5,18 +5,51 @@
   <h1>{{ title }}</h1>
   <p>{{ profile.user.email }}</p>
 </header>
-<form method="post" class="panel">
+<form method="post" class="panel" enctype="multipart/form-data">
   {% csrf_token %}
+  <h3 style="margin-bottom:1rem;color:var(--primary);">Perfil</h3>
   {% for field in profile_form %}
   <div class="form-group">
-    {% if field.field.widget.input_type == 'checkbox' %}
+    {% if field.name == 'photo' %}
+      <label class="form-label">{{ field.label }}</label>
+      <div class="barber-photo-field">
+        <div class="barber-photo-preview" data-photo-preview>
+          {% if profile.photo %}
+          <img src="{{ profile.photo.url }}" alt="Foto de {{ profile.user.full_name }}">
+          {% else %}
+          <span class="barber-photo-placeholder">Sin foto</span>
+          {% endif %}
+        </div>
+        <div class="barber-photo-controls">
+          {{ field }}
+          <p class="form-hint">JPG o PNG. Se usa como foto de perfil.</p>
+        </div>
+      </div>
+    {% elif field.field.widget.input_type == 'checkbox' %}
       <label style="display:flex;align-items:center;gap:0.6rem;">{{ field }} {{ field.label }}</label>
     {% else %}
       <label class="form-label">{{ field.label }}</label>
       {{ field }}
     {% endif %}
+    {% if field.errors %}<div class="form-error">{{ field.errors|striptags }}</div>{% endif %}
   </div>
   {% endfor %}
-  <button class="btn btn-primary btn-block" type="submit">Guardar</button>
+  <h3 style="margin:1.5rem 0 1rem;color:var(--primary);">Horarios de trabajo</h3>
+  <p class="form-hint" style="margin-bottom:1rem;">Activá los días y definí uno o más rangos horarios. Se respeta el del establecimiento.</p>
+  {% include "partials/barber_schedule_fields.html" %}
+  <button class="btn btn-primary btn-block" type="submit" style="margin-top:1.25rem;">Guardar</button>
 </form>
+<script>
+(function () {
+  const input = document.querySelector('input[type="file"][name="photo"]');
+  const preview = document.querySelector('[data-photo-preview]');
+  if (!input || !preview) return;
+  input.addEventListener('change', () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    preview.innerHTML = `<img src="${url}" alt="Vista previa">`;
+  });
+})();
+</script>
 {% endblock %}

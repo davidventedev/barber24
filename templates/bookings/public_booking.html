@@ -31,11 +31,11 @@
     {% endif %}
 
     <div class="form-group">
-      <label class="form-label">Sucursal</label>
-      <select class="form-input" name="branch" required>
-        <option value="">Elegí sucursal</option>
-        {% for b in branches %}
-        <option value="{{ b.pk }}">{{ b.name }}{% if b.city %} — {{ b.city }}{% endif %}</option>
+      <label class="form-label">Establecimiento</label>
+      <select class="form-input" name="establishment" required>
+        <option value="">Elegí establecimiento</option>
+        {% for e in establishments %}
+        <option value="{{ e.pk }}">{{ e.name }}{% if e.city %} — {{ e.city }}{% endif %}</option>
         {% endfor %}
       </select>
     </div>

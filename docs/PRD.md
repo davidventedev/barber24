@@ -1,7 +1,7 @@
 # Barber24 — Product Requirements Document (PRD)
 
 ## Visión
-Barber24 es un SaaS multitenant que permite a barberías gestionar reservas, catálogo, sucursales y barberos, con un formulario público de reservas que notifica por WhatsApp.
+Barber24 es un SaaS multitenant que permite a barberías gestionar reservas, catálogo, establecimientos y barberos, con un formulario público de reservas que notifica por WhatsApp.
 
 ## Roles
 | Rol | Descripción |
@@ -16,7 +16,7 @@ Barber24 es un SaaS multitenant que permite a barberías gestionar reservas, cat
 ### Público
 - Landing SaaS
 - Link de reservas por barbería (`/b/{slug}/`)
-- Formulario personalizable que abre WhatsApp con el mensaje a la sucursal
+- Formulario personalizable que abre WhatsApp con el mensaje a la establecimiento
 
 ### Barbero
 - Calendario de citas
@@ -26,7 +26,7 @@ Barber24 es un SaaS multitenant que permite a barberías gestionar reservas, cat
 
 ### Dueño
 - Métricas de todos los barberos
-- Configuración: General, Catálogo, Sucursales, Barberos
+- Configuración: General, Catálogo, Establecimientos, Barberos
 - Personalización del formulario de reserva
 
 ### Cliente

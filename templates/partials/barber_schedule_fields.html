@@ -1,0 +1,95 @@
+{% if schedule_form.non_field_errors %}
+<div class="form-error" style="margin-bottom:1rem;">{{ schedule_form.non_field_errors|striptags }}</div>
+{% endif %}
+<div class="schedule-list" data-schedule-list data-max-ranges="4">
+  {% for row in schedule_form.day_rows %}
+  <div class="schedule-row {% if row.is_on %}is-on{% endif %}" data-schedule-row data-day="{{ row.day }}">
+    <div class="schedule-day-name">{{ row.label }}</div>
+    <label class="schedule-switch" title="Activar o desactivar {{ row.label }}">
+      {{ row.on }}
+      <span class="schedule-switch-ui" aria-hidden="true"></span>
+    </label>
+    <div class="schedule-ranges" data-schedule-ranges {% if not row.is_on %}hidden{% endif %}>
+      <button type="button" class="schedule-range-add" data-add-range title="Agregar rango" aria-label="Agregar rango" {% if not row.can_add %}hidden{% endif %}>+</button>
+      <div class="schedule-ranges-list" data-ranges-list>
+        {% for range in row.ranges %}
+        <div class="schedule-range" data-range-row>
+          {{ range.open }}
+          <span class="schedule-to">a</span>
+          {{ range.close }}
+          <button type="button" class="schedule-range-remove" data-remove-range title="Quitar rango" aria-label="Quitar rango">×</button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<script>
+(function () {
+  const list = document.querySelector('[data-schedule-list]');
+  if (!list) return;
+  const maxRanges = parseInt(list.dataset.maxRanges || '4', 10);
+
+  function syncRemoveButtons(row) {
+    const ranges = row.querySelectorAll('[data-range-row]');
+    ranges.forEach((el) => {
+      const btn = el.querySelector('[data-remove-range]');
+      if (btn) btn.hidden = ranges.length <= 1;
+    });
+    const addBtn = row.querySelector('[data-add-range]');
+    if (addBtn) addBtn.hidden = ranges.length >= maxRanges;
+  }
+
+  function reindexDay(row) {
+    const day = row.dataset.day;
+    row.querySelectorAll('[data-range-row]').forEach((el, index) => {
+      const open = el.querySelector('input[type="time"][name*="_open_"]');
+      const close = el.querySelector('input[type="time"][name*="_close_"]');
+      if (open) {
+        open.name = `work_${day}_open_${index}`;
+        open.id = `id_work_${day}_open_${index}`;
+      }
+      if (close) {
+        close.name = `work_${day}_close_${index}`;
+        close.id = `id_work_${day}_close_${index}`;
+      }
+    });
+    syncRemoveButtons(row);
+  }
+
+  list.querySelectorAll('[data-schedule-row]').forEach((row) => {
+    const input = row.querySelector('.schedule-switch-input');
+    const ranges = row.querySelector('[data-schedule-ranges]');
+    if (!input || !ranges) return;
+
+    const sync = () => {
+      row.classList.toggle('is-on', input.checked);
+      ranges.hidden = !input.checked;
+    };
+    input.addEventListener('change', sync);
+    sync();
+    syncRemoveButtons(row);
+
+    row.querySelector('[data-add-range]')?.addEventListener('click', () => {
+      const wrap = row.querySelector('[data-ranges-list]');
+      const items = wrap.querySelectorAll('[data-range-row]');
+      if (items.length >= maxRanges) return;
+      const clone = items[items.length - 1].cloneNode(true);
+      clone.querySelectorAll('input[type="time"]').forEach((el) => { el.value = ''; });
+      wrap.appendChild(clone);
+      reindexDay(row);
+    });
+
+    row.addEventListener('click', (event) => {
+      const btn = event.target.closest('[data-remove-range]');
+      if (!btn) return;
+      const wrap = row.querySelector('[data-ranges-list]');
+      const items = wrap.querySelectorAll('[data-range-row]');
+      if (items.length <= 1) return;
+      btn.closest('[data-range-row]')?.remove();
+      reindexDay(row);
+    });
+  });
+})();
+</script>

@@ -1,0 +1,25 @@
+{% extends "base_app.html" %}
+{% block title %}Establecimientos — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+{% include "partials/settings_tabs.html" %}
+<header class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+  <h1>Establecimientos</h1>
+  <a class="btn btn-primary btn-sm" href="{% url 'dashboard:establishment_create' %}">+ Establecimiento</a>
+</header>
+<div class="panel">
+  {% for e in establishments %}
+  <div class="list-row">
+    <div>
+      <strong>{{ e.name }}</strong>
+      <div style="font-size:0.85rem;color:var(--text-muted);">
+        {{ e.open_time|time:"H:i" }} – {{ e.close_time|time:"H:i" }}
+        · WA: {{ e.whatsapp_number }}{% if e.city %} · {{ e.city }}{% endif %}
+      </div>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:establishment_edit' e.pk %}">Editar</a>
+  </div>
+  {% empty %}
+  <div class="empty-state">Agregá al menos un establecimiento con WhatsApp.</div>
+  {% endfor %}
+</div>
+{% endblock %}

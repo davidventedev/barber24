@@ -1,10 +1,10 @@
 from django.contrib import admin
 
-from .models import BarberProfile, Barbershop, Branch, Service
+from .models import BarberProfile, Barbershop, Establishment, Service
 
 
-class BranchInline(admin.TabularInline):
-    model = Branch
+class EstablishmentInline(admin.TabularInline):
+    model = Establishment
     extra = 0
 
 
@@ -19,12 +19,12 @@ class BarbershopAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'city']
     search_fields = ['name', 'slug']
     prepopulated_fields = {'slug': ('name',)}
-    inlines = [BranchInline, ServiceInline]
+    inlines = [EstablishmentInline, ServiceInline]
 
 
-@admin.register(Branch)
-class BranchAdmin(admin.ModelAdmin):
-    list_display = ['name', 'shop', 'whatsapp_number', 'is_active']
+@admin.register(Establishment)
+class EstablishmentAdmin(admin.ModelAdmin):
+    list_display = ['name', 'shop', 'open_time', 'close_time', 'whatsapp_number', 'is_active']
     list_filter = ['shop', 'is_active']
 
 
@@ -36,5 +36,9 @@ class ServiceAdmin(admin.ModelAdmin):
 
 @admin.register(BarberProfile)
 class BarberProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'shop', 'branch', 'is_active']
+    list_display = ['user', 'shop', 'establishment', 'is_active']
     list_filter = ['shop', 'is_active']
+    fields = [
+        'user', 'shop', 'establishment', 'photo', 'bio', 'specialties',
+        'calendar_color', 'work_hours', 'is_active',
+    ]

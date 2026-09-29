@@ -11,7 +11,7 @@
     <div>
       <strong>{{ a.shop.name }}</strong>
       <div style="font-size:0.85rem;color:var(--text-muted);">
-        {{ a.service.name }} · {{ a.branch.name }} · {{ a.starts_at|date:"d/m/Y H:i" }}
+        {{ a.service.name }} · {{ a.establishment.name }} · {{ a.starts_at|date:"d/m/Y H:i" }}
       </div>
     </div>
     <span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span>

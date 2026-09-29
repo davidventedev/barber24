@@ -1,44 +1,154 @@
 {% extends "base_app.html" %}
-{% block title %}Calendario — {{ BRAND_NAME }}{% endblock %}
+{% block title %}Agenda — {{ BRAND_NAME }}{% endblock %}
+{% block main_class %}container gcal-page{% endblock %}
 {% block content %}
-<header class="page-header">
-  <div class="eyebrow">Agenda</div>
-  <h1>Calendario</h1>
-</header>
-
-<div class="cal-nav">
-  <a class="btn btn-ghost btn-sm" href="?w={{ prev_w }}">← Ant.</a>
-  <strong>{{ start|date:"d M" }} — {{ end|date:"d M Y" }}</strong>
-  <a class="btn btn-ghost btn-sm" href="?w={{ next_w }}">Sig. →</a>
-</div>
-
-<div class="cal-week">
-{% for day in days %}
-  <div class="cal-day">
-    <div class="cal-day-title">
-      <span>{{ day.date|date:"D" }}</span>
-      <span>{{ day.date|date:"d/m" }}</span>
-    </div>
-    {% for a in day.items %}
-    <div class="cal-item" style="border-left-color:{% if a.barber %}{{ a.barber.calendar_color }}{% else %}var(--primary){% endif %}">
-      <div class="time">{{ a.starts_at|date:"H:i" }}</div>
-      <div>
-        <strong>{{ a.guest_name }}</strong>
-        <div style="font-size:0.8rem;color:var(--text-muted);">{{ a.service.name }}</div>
+<div class="gcal">
+  <header class="gcal-toolbar">
+    <div class="gcal-toolbar-left">
+      <a class="btn btn-ghost btn-sm gcal-today" href="?view={{ view_mode }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}">Hoy</a>
+      <div class="gcal-nav-arrows">
+        <a class="gcal-arrow" href="?w={{ prev_w }}&view={{ view_mode }}&d={{ day_index }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <a class="gcal-arrow" href="?w={{ next_w }}&view={{ view_mode }}&d={{ day_index }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}" aria-label="Siguiente">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
       </div>
-      <form method="post" action="{% url 'dashboard:appointment_status' a.pk %}">
-        {% csrf_token %}
-        <select name="status" class="form-input" style="padding:0.35rem;min-height:auto;font-size:0.75rem;" onchange="this.form.submit()">
-          {% for val, label in status_choices %}
-          <option value="{{ val }}" {% if a.status == val %}selected{% endif %}>{{ label }}</option>
+      <h1 class="gcal-title">{{ month_label }}</h1>
+    </div>
+    <div class="gcal-toolbar-right">
+      {% if show_barber_select %}
+      <label class="gcal-barber-select">
+        <span class="sr-only">Barbero</span>
+        <select class="form-input" onchange="location.href=this.value">
+          {% for b in barbers %}
+          <option value="?w={{ week_offset }}&view={{ view_mode }}&d={{ day_index }}&barber={{ b.pk }}" {% if selected_barber and selected_barber.pk == b.pk %}selected{% endif %}>
+            {{ b.user.full_name }}
+          </option>
           {% endfor %}
         </select>
-      </form>
+      </label>
+      {% endif %}
+      <div class="gcal-view-switch" role="tablist">
+        <a href="?w={{ week_offset }}&view=day&d={{ day_index }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}" class="{% if view_mode == 'day' %}active{% endif %}" role="tab">Día</a>
+        <a href="?w={{ week_offset }}&view=week&d={{ day_index }}{% if selected_barber %}&barber={{ selected_barber.pk }}{% endif %}" class="{% if view_mode == 'week' %}active{% endif %}" role="tab">Semana</a>
+      </div>
     </div>
-    {% empty %}
-    <div class="cal-empty">Libre</div>
-    {% endfor %}
+  </header>
+
+  <div class="gcal-board">
+    <div class="gcal-scroll" id="gcal-scroll">
+      <div class="gcal-grid {% if view_mode == 'day' %}gcal-grid-day{% endif %}" style="--gcal-hour: {{ px_per_hour }}px; --gcal-cols: {% if view_mode == 'day' %}1{% else %}7{% endif %};">
+        <div class="gcal-corner"></div>
+
+        <div class="gcal-header-row">
+          {% if view_mode == 'week' %}
+            {% for day in days %}
+            <div class="gcal-col-head {% if day.is_today %}is-today{% endif %}">
+              <span class="dow">{{ day.date|date:"D"|slice:":3" }}</span>
+              <span class="dom">{{ day.date|date:"j" }}</span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="gcal-col-head {% if selected_day.is_today %}is-today{% endif %}">
+              <span class="dow">{{ selected_day.date|date:"l" }}</span>
+              <span class="dom">{{ selected_day.date|date:"j" }}</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="gcal-times" style="height: {{ grid_height }}px;">
+          {% for h in hours %}
+          <div class="gcal-hour-label {% if h in closed_hours %}is-closed{% endif %}" style="height: {{ px_per_hour }}px;">
+            <span>{% if h < 10 %}0{% endif %}{{ h }}:00</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="gcal-columns" style="height: {{ grid_height }}px;">
+          {% if view_mode == 'week' %}
+            {% for day in days %}
+            <div class="gcal-col {% if day.is_today %}is-today{% endif %}">
+              {% for h in hours %}
+              <div class="gcal-slot {% if h in closed_hours %}is-closed{% endif %}" style="height: {{ px_per_hour }}px;"></div>
+              {% endfor %}
+              {% for band in day.closed_ranges %}
+              <div class="gcal-closed" style="top: {{ band.top }}px; height: {{ band.height }}px;" title="Fuera de horario"></div>
+              {% endfor %}
+              {% if show_now and now_day_index == day.index %}
+              <div class="gcal-now" style="top: {{ now_top }}px;" data-now>
+                <span class="gcal-now-dot"></span>
+              </div>
+              {% endif %}
+              {% for item in day.items %}
+              {% include "dashboard/_gcal_event.html" with item=item compact=True %}
+              {% endfor %}
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="gcal-col {% if selected_day.is_today %}is-today{% endif %}">
+              {% for h in hours %}
+              <div class="gcal-slot {% if h in closed_hours %}is-closed{% endif %}" style="height: {{ px_per_hour }}px;"></div>
+              {% endfor %}
+              {% for band in selected_day.closed_ranges %}
+              <div class="gcal-closed" style="top: {{ band.top }}px; height: {{ band.height }}px;" title="Fuera de horario"></div>
+              {% endfor %}
+              {% if show_now and now_day_index == selected_day.index %}
+              <div class="gcal-now" style="top: {{ now_top }}px;" data-now>
+                <span class="gcal-now-dot"></span>
+              </div>
+              {% endif %}
+              {% for item in selected_day.items %}
+              {% include "dashboard/_gcal_event.html" with item=item compact=False %}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
-{% endfor %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const scrollEl = document.getElementById('gcal-scroll');
+  const nowLine = document.querySelector('[data-now]');
+  const openTop = {{ open_top|default:0 }};
+  const pxPerHour = {{ px_per_hour|default:48 }};
+
+  if (scrollEl) {
+    if (nowLine) {
+      scrollEl.scrollTop = Math.max(0, nowLine.offsetTop - scrollEl.clientHeight / 3);
+    } else {
+      scrollEl.scrollTop = Math.max(0, openTop - pxPerHour);
+    }
+  }
+
+  function closeAll() {
+    document.querySelectorAll('[data-event]').forEach((el) => {
+      el.setAttribute('aria-expanded', 'false');
+      const p = el.querySelector('.gcal-event-pop');
+      if (p) p.hidden = true;
+    });
+  }
+
+  document.querySelectorAll('[data-event]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.gcal-event-pop')) return;
+      e.stopPropagation();
+      const pop = el.querySelector('.gcal-event-pop');
+      const open = el.getAttribute('aria-expanded') === 'true';
+      closeAll();
+      if (!open && pop) {
+        el.setAttribute('aria-expanded', 'true');
+        pop.hidden = false;
+      }
+    });
+  });
+
+  document.addEventListener('click', closeAll);
+})();
+</script>
 {% endblock %}

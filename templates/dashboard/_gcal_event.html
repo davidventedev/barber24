@@ -1,0 +1,34 @@
+<div
+  class="gcal-event"
+  style="top: {{ item.top }}px; height: {{ item.height }}px; --event-color: {{ item.color }};"
+  data-event
+  role="button"
+  tabindex="0"
+  aria-expanded="false">
+  {% if compact %}
+  <span class="gcal-event-time">{{ item.start_label }}</span>
+  <span class="gcal-event-title">{{ item.appt.guest_name }}</span>
+  <span class="gcal-event-meta">{{ item.appt.service.name }}{% if item.appt.establishment %} · {{ item.appt.establishment.name }}{% endif %}</span>
+  {% else %}
+  <span class="gcal-event-time">{{ item.start_label }} – {{ item.end_label }}</span>
+  <span class="gcal-event-title">{{ item.appt.guest_name }}</span>
+  <span class="gcal-event-meta">{{ item.appt.service.name }}{% if item.appt.establishment %} · {{ item.appt.establishment.name }}{% endif %}</span>
+  {% endif %}
+  <div class="gcal-event-pop" hidden>
+    <div class="gcal-pop-head">
+      <strong>{{ item.appt.guest_name }}</strong>
+      <span>{{ item.start_label }} – {{ item.end_label }}</span>
+    </div>
+    <p>{{ item.appt.service.name }}{% if item.appt.establishment %} · {{ item.appt.establishment.name }}{% endif %}</p>
+    {% if item.appt.guest_phone %}<p class="muted">{{ item.appt.guest_phone }}</p>{% endif %}
+    <form method="post" action="{% url 'dashboard:appointment_status' item.appt.pk %}">
+      {% csrf_token %}
+      <label class="form-label">Estado</label>
+      <select name="status" class="form-input" onchange="this.form.submit()">
+        {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if item.appt.status == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+</div>

@@ -16,7 +16,12 @@ class Appointment(models.Model):
         MANUAL = 'manual', 'Manual'
 
     shop = models.ForeignKey('shops.Barbershop', on_delete=models.CASCADE, related_name='appointments')
-    branch = models.ForeignKey('shops.Branch', on_delete=models.PROTECT, related_name='appointments')
+    establishment = models.ForeignKey(
+        'shops.Establishment',
+        on_delete=models.PROTECT,
+        related_name='appointments',
+        verbose_name='establecimiento',
+    )
     barber = models.ForeignKey(
         'shops.BarberProfile',
         on_delete=models.SET_NULL,
@@ -77,7 +82,7 @@ class Appointment(models.Model):
             f'👤 *Cliente:* {self.guest_name}',
             f'📱 *Teléfono:* {self.guest_phone}',
             f'✂️ *Servicio:* {self.service.name}',
-            f'📍 *Sucursal:* {self.branch.name}',
+            f'📍 *Establecimiento:* {self.establishment.name}',
             f'🧑‍🎤 *Barbero:* {barber_name}',
             f'🗓 *Fecha:* {self.starts_at:%d/%m/%Y}',
             f'⏰ *Hora:* {self.starts_at:%H:%M}',
@@ -89,6 +94,6 @@ class Appointment(models.Model):
 
     def whatsapp_url(self):
         from urllib.parse import quote
-        phone = ''.join(c for c in self.branch.whatsapp_number if c.isdigit())
+        phone = ''.join(c for c in self.establishment.whatsapp_number if c.isdigit())
         text = quote(self.build_whatsapp_message())
         return f'https://wa.me/{phone}?text={text}'
