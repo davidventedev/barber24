@@ -29,7 +29,7 @@
   --display: "Bebas Neue", "Arial Narrow", sans-serif;
   --nav-h: 64px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --gcal-nav-gap: 4px;
+  --gcal-nav-gap: 12px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -459,8 +459,8 @@ body:has(.gcal-page) {
   padding-left: 0;
   padding-right: 0;
   /* Size the agenda so its bottom edge sits above the fixed mobile toolbar. */
-  height: calc(100dvh - var(--nav-h) - var(--safe-bottom) - var(--gcal-nav-gap));
-  max-height: calc(100dvh - var(--nav-h) - var(--safe-bottom) - var(--gcal-nav-gap));
+  height: calc(100svh - var(--nav-h) - var(--safe-bottom) - var(--gcal-nav-gap) - 0.5rem);
+  max-height: calc(100dvh - var(--nav-h) - var(--safe-bottom) - var(--gcal-nav-gap) - 0.5rem);
   overflow: hidden;
   display: flex;
   flex-direction: column;
