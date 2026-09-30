@@ -834,57 +834,93 @@ body:has(.gcal-page) {
 .gcal-view-switch a:hover { color: var(--text); }
 
 .gcal-board {
+  --gcal-gutter: 52px;
+  --gcal-col-min: 108px;
   flex: 1;
+  display: grid;
+  grid-template-columns: var(--gcal-gutter) minmax(0, 1fr);
+  column-gap: 0.4rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: hidden;
+  min-height: 0;
+}
+.gcal-board-day {
+  --gcal-col-min: 220px;
+}
+.gcal-gutter {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.gcal-gutter-head {
+  flex: 0 0 var(--gcal-header-h, 4.25rem);
+  pointer-events: none;
+}
+.gcal-times-clip {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.gcal-times {
+  position: relative;
+  will-change: transform;
+  background: transparent;
+  border: 0;
+  pointer-events: none;
+}
+.gcal-hour-label { position: relative; }
+.gcal-hour-label span {
+  position: absolute;
+  top: -0.55em;
+  right: 0.2rem;
+  font-size: 0.68rem;
+  color: #c2c2c2;
+  font-variant-numeric: tabular-nums;
+}
+.gcal-hour-label.is-closed span { color: #c2c2c2; }
+.gcal-hour-label:first-child span { top: 0.25rem; }
+
+.gcal-frame {
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg-elevated);
   overflow: hidden;
+}
+.gcal-frame-x {
+  flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-.gcal-scroll {
-  flex: 1;
+.gcal-frame-x::-webkit-scrollbar { display: none; }
+.gcal-frame-inner {
+  flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Legacy Edge */
+  display: flex;
+  flex-direction: column;
+  width: max(100%, calc(var(--gcal-cols, 7) * var(--gcal-col-min)));
 }
-.gcal-scroll::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
-}
-.gcal-grid {
-  --gcal-gutter: 52px;
-  --gcal-col-min: 108px;
-  display: grid;
-  grid-template-columns: var(--gcal-gutter) repeat(var(--gcal-cols, 7), minmax(var(--gcal-col-min), 1fr));
-  grid-template-rows: auto auto;
-  width: max(100%, calc(var(--gcal-gutter) + var(--gcal-cols, 7) * var(--gcal-col-min)));
-  position: relative;
-}
-.gcal-grid-day {
-  --gcal-col-min: 220px;
+.gcal-board-day .gcal-frame-inner {
   width: 100%;
 }
-.gcal-corner {
-  grid-column: 1;
-  grid-row: 1;
-  position: sticky;
-  left: 0;
-  top: 0;
-  z-index: 5;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
 .gcal-header-row {
-  grid-column: 2 / -1;
-  grid-row: 1;
+  flex: 0 0 auto;
   display: grid;
-  grid-template-columns: subgrid;
-  position: sticky;
-  top: 0;
+  grid-template-columns: repeat(var(--gcal-cols, 7), minmax(var(--gcal-col-min), 1fr));
+  position: relative;
   z-index: 4;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -923,33 +959,23 @@ body:has(.gcal-page) {
   background: var(--primary);
   color: #111;
 }
-
-.gcal-times {
-  grid-column: 1;
-  grid-row: 2;
-  position: sticky;
-  left: 0;
-  z-index: 3;
-  background: var(--bg-elevated);
-  border-right: 1px solid var(--border);
+.gcal-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-.gcal-hour-label { position: relative; }
-.gcal-hour-label span {
-  position: absolute;
-  top: -0.55em;
-  right: 0.45rem;
-  font-size: 0.68rem;
-  color: var(--text-dim);
-  font-variant-numeric: tabular-nums;
+.gcal-scroll::-webkit-scrollbar {
+  display: none;
 }
-.gcal-hour-label.is-closed span { color: #4a4a4a; }
-.gcal-hour-label:first-child span { top: 0.25rem; }
-
 .gcal-columns {
-  grid-column: 2 / -1;
-  grid-row: 2;
   display: grid;
-  grid-template-columns: subgrid;
+  grid-template-columns: repeat(var(--gcal-cols, 7), minmax(var(--gcal-col-min), 1fr));
+  background: var(--bg-elevated);
+  width: 100%;
 }
 .gcal-col {
   position: relative;
@@ -1111,15 +1137,7 @@ body:has(.gcal-page) {
     max-height: none;
   }
   .gcal-title { font-size: 1.45rem; }
-  .gcal-grid { --gcal-col-min: 120px; }
-}
-
-@supports not (grid-template-columns: subgrid) {
-  .gcal-header-row,
-  .gcal-columns {
-    display: grid;
-    grid-template-columns: repeat(var(--gcal-cols, 7), minmax(var(--gcal-col-min), 1fr));
-  }
+  .gcal-board { --gcal-col-min: 120px; }
 }
 
 /* Settings tabs */
