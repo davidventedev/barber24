@@ -1,7 +1,37 @@
 {% extends "base_app.html" %}
 {% block title %}Agenda — {{ BRAND_NAME }}{% endblock %}
+{% block extra_head %}
+<style>
+  /* Hide agenda on mobile until JS confirms day view (avoids week-view flash). */
+  @media (max-width: 768px) {
+    .gcal-page { position: relative; }
+    .gcal:not([data-gcal-ready]) { visibility: hidden; }
+    .gcal-page:has(.gcal:not([data-gcal-ready])) .gcal-loading {
+      display: grid;
+      place-items: center;
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+  }
+  .gcal-loading { display: none; }
+  .gcal-loading-spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #3a3a3a;
+    border-top-color: #EAC452;
+    border-radius: 50%;
+    animation: gcalSpin 0.7s linear infinite;
+  }
+  @keyframes gcalSpin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
 {% block main_class %}container gcal-page{% endblock %}
 {% block content %}
+<div class="gcal-loading" data-gcal-loading aria-live="polite" aria-busy="true">
+  <span class="gcal-loading-spinner" aria-hidden="true"></span>
+  <span class="sr-only">Cargando agenda…</span>
+</div>
 <div
   class="gcal"
   data-gcal
@@ -147,7 +177,18 @@
   const root = document.querySelector('[data-gcal]');
   const isMobile = () => window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches;
 
+  function revealGcal() {
+    if (!root || root.hasAttribute('data-gcal-ready')) return;
+    root.setAttribute('data-gcal-ready', '');
+    const loading = document.querySelector('[data-gcal-loading]');
+    if (loading) {
+      loading.setAttribute('aria-busy', 'false');
+      loading.hidden = true;
+    }
+  }
+
   // On small screens, lock to day view and drop the week switch.
+  // Stay hidden until day view is confirmed so the week grid never flashes.
   if (root && isMobile()) {
     const params = new URLSearchParams(window.location.search);
     if (params.get('view') !== 'day') {
@@ -157,6 +198,10 @@
       return;
     }
   }
+
+  revealGcal();
+  // Safety: never leave the agenda invisible if something else fails.
+  setTimeout(revealGcal, 2000);
 
   const scrollEl = document.getElementById('gcal-scroll');
   const nowLine = document.querySelector('[data-now]');

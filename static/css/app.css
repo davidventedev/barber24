@@ -72,6 +72,22 @@ p { margin: 0 0 1rem; color: var(--text-muted); }
 }
 .app-main.gcal-page {
   padding-bottom: 0;
+  position: relative;
+}
+.gcal-loading {
+  display: none;
+  pointer-events: none;
+}
+.gcal-loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: gcalSpin 0.7s linear infinite;
+}
+@keyframes gcalSpin {
+  to { transform: rotate(360deg); }
 }
 .container {
   width: min(1100px, 100% - 2rem);
@@ -472,6 +488,16 @@ body:has(.gcal-page) {
   flex: 1;
   min-height: 0;
   height: auto;
+}
+@media (max-width: 768px) {
+  .gcal:not([data-gcal-ready]) { visibility: hidden; }
+  .gcal-page:has(.gcal:not([data-gcal-ready])) .gcal-loading {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
 }
 .gcal-toolbar {
   display: flex;
