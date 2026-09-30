@@ -155,9 +155,7 @@
                   <div class="gcal-closed" style="top: {{ band.top }}px; height: {{ band.height }}px;" title="Fuera de horario"></div>
                   {% endfor %}
                   {% if show_now and now_day_index == day.index %}
-                  <div class="gcal-now" style="top: {{ now_top }}px;" data-now data-now-date="{{ today|date:'Y-m-d' }}">
-                    <span class="gcal-now-dot"></span>
-                  </div>
+                  <div class="gcal-now" style="top: {{ now_top }}px;" data-now data-now-date="{{ today|date:'Y-m-d' }}"></div>
                   {% endif %}
                   {% for item in day.items %}
                   {% include "dashboard/_gcal_event.html" with item=item compact=True %}
@@ -173,9 +171,7 @@
                   <div class="gcal-closed" style="top: {{ band.top }}px; height: {{ band.height }}px;" title="Fuera de horario"></div>
                   {% endfor %}
                   {% if show_now and now_day_index == selected_day.index %}
-                  <div class="gcal-now" style="top: {{ now_top }}px;" data-now data-now-date="{{ today|date:'Y-m-d' }}">
-                    <span class="gcal-now-dot"></span>
-                  </div>
+                  <div class="gcal-now" style="top: {{ now_top }}px;" data-now data-now-date="{{ today|date:'Y-m-d' }}"></div>
                   {% endif %}
                   {% for item in selected_day.items %}
                   {% include "dashboard/_gcal_event.html" with item=item compact=False %}
@@ -187,6 +183,9 @@
         </div>
       </div>
     </div>
+    {% if show_now %}
+    <span class="gcal-now-dot" data-now-dot hidden></span>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
@@ -365,6 +364,8 @@
   const scrollEl = document.getElementById('gcal-scroll');
   const timesEl = document.getElementById('gcal-times');
   const nowLine = document.querySelector('[data-now]');
+  const nowDot = document.querySelector('[data-now-dot]');
+  const boardEl = document.querySelector('.gcal-board');
   const openTop = {{ open_top|default:0 }};
   const pxPerHour = {{ px_per_hour|default:96 }};
   const gridHeight = {{ grid_height|default:1152 }};
@@ -373,6 +374,35 @@
   function syncTimesScroll() {
     if (!timesEl || !scrollEl) return;
     timesEl.style.transform = `translateY(${-scrollEl.scrollTop}px)`;
+  }
+
+  function syncNowDot() {
+    if (!nowDot || !boardEl) return;
+    const line = document.querySelector('[data-now]');
+    if (!line || line.hidden) {
+      nowDot.hidden = true;
+      return;
+    }
+    const frame = boardEl.querySelector('.gcal-frame');
+    const clipEl = scrollEl || frame;
+    if (!clipEl) {
+      nowDot.hidden = true;
+      return;
+    }
+    const lineRect = line.getBoundingClientRect();
+    const boardRect = boardEl.getBoundingClientRect();
+    const clipRect = clipEl.getBoundingClientRect();
+    if (lineRect.bottom < clipRect.top || lineRect.top > clipRect.bottom) {
+      nowDot.hidden = true;
+      return;
+    }
+    if (lineRect.right < clipRect.left || lineRect.left > clipRect.right) {
+      nowDot.hidden = true;
+      return;
+    }
+    nowDot.hidden = false;
+    nowDot.style.top = `${lineRect.top - boardRect.top + lineRect.height / 2}px`;
+    nowDot.style.left = `${lineRect.left - boardRect.left}px`;
   }
 
   function localDateKey(d) {
@@ -388,19 +418,25 @@
 
   function updateNowLine() {
     const line = document.querySelector('[data-now]');
-    if (!line) return;
+    if (!line) {
+      if (nowDot) nowDot.hidden = true;
+      return;
+    }
     const now = new Date();
     if (line.dataset.nowDate && line.dataset.nowDate !== localDateKey(now)) {
       line.hidden = true;
+      if (nowDot) nowDot.hidden = true;
       return;
     }
     const top = (minutesFromMidnight(now) / 60) * pxPerHour;
     if (top < 0 || top > gridHeight) {
       line.hidden = true;
+      if (nowDot) nowDot.hidden = true;
       return;
     }
     line.hidden = false;
     line.style.top = `${top.toFixed(2)}px`;
+    syncNowDot();
   }
 
   updateNowLine();
@@ -408,15 +444,25 @@
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) updateNowLine();
   });
+  window.addEventListener('resize', syncNowDot);
 
   if (scrollEl) {
-    scrollEl.addEventListener('scroll', syncTimesScroll, { passive: true });
+    scrollEl.addEventListener('scroll', () => {
+      syncTimesScroll();
+      syncNowDot();
+    }, { passive: true });
     if (nowLine && !nowLine.hidden) {
       scrollEl.scrollTop = Math.max(0, nowLine.offsetTop - scrollEl.clientHeight / 3);
     } else {
       scrollEl.scrollTop = Math.max(0, openTop - pxPerHour);
     }
     syncTimesScroll();
+    syncNowDot();
+  }
+
+  const frameX = document.getElementById('gcal-frame-x');
+  if (frameX) {
+    frameX.addEventListener('scroll', syncNowDot, { passive: true });
   }
 
   function closeAll() {
