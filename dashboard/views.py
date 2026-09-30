@@ -254,7 +254,7 @@ def calendar_view(request):
         qs = qs.filter(barber=selected_barber)
 
     appointments = list(qs)
-    px_per_hour = 48
+    px_per_hour = 96
     hours = list(range(24))
     grid_height = 24 * px_per_hour
 

@@ -991,12 +991,12 @@ body:has(.gcal-page) {
 .gcal-slot.is-closed {
   background: repeating-linear-gradient(
     -45deg,
-    rgba(255, 255, 255, 0.015),
-    rgba(255, 255, 255, 0.015) 6px,
-    rgba(0, 0, 0, 0.18) 6px,
-    rgba(0, 0, 0, 0.18) 12px
+    rgba(255, 255, 255, 0.045),
+    rgba(255, 255, 255, 0.045) 6px,
+    rgba(0, 0, 0, 0.28) 6px,
+    rgba(0, 0, 0, 0.28) 12px
   );
-  border-bottom-color: #1f1f1f;
+  border-bottom-color: #242424;
 }
 .gcal-closed {
   position: absolute;
@@ -1009,10 +1009,10 @@ body:has(.gcal-page) {
       -45deg,
       transparent,
       transparent 5px,
-      rgba(255, 255, 255, 0.03) 5px,
-      rgba(255, 255, 255, 0.03) 10px
+      rgba(255, 255, 255, 0.065) 5px,
+      rgba(255, 255, 255, 0.065) 10px
     ),
-    rgba(0, 0, 0, 0.42);
+    rgba(0, 0, 0, 0.5);
 }
 
 .gcal-now {
