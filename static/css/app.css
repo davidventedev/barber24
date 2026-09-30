@@ -580,10 +580,121 @@ body:has(.gcal-page) {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  gap: 0.45rem;
+  flex-wrap: nowrap;
   justify-self: end;
 }
+.gcal-date-picker {
+  position: relative;
+  flex-shrink: 0;
+}
+.gcal-date-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.gcal-date-btn:hover,
+.gcal-date-btn[aria-expanded="true"] {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.gcal-date-pop {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 30;
+  width: min(18.5rem, calc(100vw - 1.5rem));
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.gcal-date-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+.gcal-date-pop-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  text-align: center;
+  flex: 1;
+  text-transform: capitalize;
+}
+.gcal-date-pop-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.gcal-date-pop-nav:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.gcal-date-pop-dows {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.15rem;
+  margin-bottom: 0.25rem;
+}
+.gcal-date-pop-dows span {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 0.2rem 0;
+}
+.gcal-date-pop-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.15rem;
+}
+.gcal-date-pop-day {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+.gcal-date-pop-day:hover { background: var(--surface-2); }
+.gcal-date-pop-day.is-other { color: var(--text-dim); }
+.gcal-date-pop-day.is-today { color: var(--primary); font-weight: 700; }
+.gcal-date-pop-day.is-selected {
+  background: var(--primary);
+  color: #111;
+  font-weight: 700;
+}
+.gcal-date-pop-day.is-selected.is-today { color: #111; }
 .gcal-barber {
   display: inline-flex;
   align-items: center;
@@ -629,12 +740,21 @@ body:has(.gcal-page) {
   min-width: 160px;
 }
 @media (max-width: 768px) {
+  .gcal {
+    --gcal-gutter: 1.65rem;
+    column-gap: 0.3rem;
+  }
+  .gcal-hour-label span {
+    font-size: 0.88rem;
+    right: 0.2rem;
+  }
   .gcal-toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.2rem 0.85rem 0;
+    /* Left matches calendar frame; right stays flush with the frame edge. */
+    padding: 0.2rem 0 0 calc(var(--gcal-gutter) + 0.3rem);
   }
   .gcal-title,
   .gcal-nav-arrows {
@@ -923,10 +1043,14 @@ body:has(.gcal-page) {
 .gcal-hour-label span {
   position: absolute;
   top: -0.55em;
-  right: 0.1rem;
-  font-size: 0.62rem;
+  right: 0.15rem;
+  left: 0;
+  text-align: right;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: #c2c2c2;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 .gcal-hour-label.is-closed span { color: #c2c2c2; }
 .gcal-hour-label:first-child span { top: 0.25rem; }
@@ -1038,9 +1162,11 @@ body:has(.gcal-page) {
 .gcal-day-card.is-selected:not(.is-today) .dom {
   background: var(--surface-3);
 }
-.gcal-day-card:hover {
-  border-color: var(--border);
-  background: var(--surface-2);
+@media (hover: hover) and (pointer: fine) {
+  .gcal-day-card:hover {
+    border-color: var(--border);
+    background: var(--surface-2);
+  }
 }
 .gcal-col-head {
   display: flex;
@@ -1100,7 +1226,6 @@ body:has(.gcal-page) {
   min-width: 0;
 }
 .gcal-col:last-child { border-right: 0; }
-.gcal-col.is-today { background: rgba(234, 196, 82, 0.03); }
 .gcal-slot {
   border-bottom: 1px solid var(--border);
   box-sizing: border-box;
@@ -1142,18 +1267,17 @@ body:has(.gcal-page) {
   z-index: 3;
   pointer-events: none;
 }
-/* Lives on .gcal-board (outside the clipped frame) so it can sit on the left edge. */
-.gcal-now-dot {
+/* Attached to the bar (no JS sync). Kept fully inside so the frame radius stays clean. */
+.gcal-now::before {
+  content: '';
   position: absolute;
-  top: 0;
   left: 0;
+  top: 50%;
   width: 10px;
   height: 10px;
   border-radius: 999px;
   background: #ea4335;
-  transform: translate(-50%, -50%);
-  z-index: 5;
-  pointer-events: none;
+  transform: translate(0, -50%);
 }
 
 .gcal-event {
@@ -1268,7 +1392,7 @@ body:has(.gcal-page) {
   }
   .gcal-hour-label span {
     right: 0.2rem;
-    font-size: 0.68rem;
+    font-size: 0.85rem;
   }
   .gcal-toolbar {
     grid-column: 2;

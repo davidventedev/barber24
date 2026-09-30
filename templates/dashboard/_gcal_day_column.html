@@ -1,0 +1,14 @@
+<div class="gcal-col {% if selected_day.is_today %}is-today{% endif %}">
+  {% for h in hours %}
+  <div class="gcal-slot {% if h in closed_hours %}is-closed{% endif %}" style="height: {{ px_per_hour }}px;"></div>
+  {% endfor %}
+  {% for band in selected_day.closed_ranges %}
+  <div class="gcal-closed" style="top: {{ band.top }}px; height: {{ band.height }}px;" title="Fuera de horario"></div>
+  {% endfor %}
+  {% if show_now_line %}
+  <div class="gcal-now" style="top: {{ now_top }}px;" data-now data-now-date="{{ today|date:'Y-m-d' }}"></div>
+  {% endif %}
+  {% for item in selected_day.items %}
+  {% include "dashboard/_gcal_event.html" with item=item compact=False %}
+  {% endfor %}
+</div>

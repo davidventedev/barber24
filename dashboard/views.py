@@ -6,7 +6,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncDate
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -341,8 +343,11 @@ def calendar_view(request):
     prev_day_w, prev_day_d = _shift_day(-1)
     next_day_w, next_day_d = _shift_day(1)
     barber_q = f'&barber={selected_barber.pk}' if selected_barber else ''
+    show_now_line = bool(
+        show_now and now_top is not None and (now.isoweekday() % 7) == selected_day['index']
+    )
 
-    return render(request, 'dashboard/calendar.html', {
+    context = {
         'days': days,
         'selected_day': selected_day,
         'start': start,
@@ -370,11 +375,33 @@ def calendar_view(request):
         'px_per_hour': px_per_hour,
         'grid_height': grid_height,
         'show_now': show_now,
+        'show_now_line': show_now_line,
         'now_top': now_top,
         'now_day_index': now.isoweekday() % 7 if show_now else None,
         'month_label': month_label,
         'status_choices': Appointment.Status.choices,
-    })
+    }
+
+    if request.GET.get('partial') == 'day' and view_mode == 'day':
+        html = render_to_string('dashboard/_gcal_day_column.html', context, request=request)
+        return JsonResponse({
+            'html': html,
+            'date': selected_day['date'].isoformat(),
+            'w': week_offset,
+            'd': day_index,
+            'month_label': month_label,
+            'is_today': selected_day['is_today'],
+            'show_now': show_now_line,
+            'now_top': now_top,
+            'open_top': f'{open_top:.2f}',
+            'prev_day': f'?w={prev_day_w}&view=day&d={prev_day_d}{barber_q}',
+            'next_day': f'?w={next_day_w}&view=day&d={next_day_d}{barber_q}',
+            'today_url': f'?view=day{barber_q}',
+            'closed_hours': sorted(closed_hours),
+            'url': f'{request.path}?w={week_offset}&view=day&d={day_index}{barber_q}',
+        })
+
+    return render(request, 'dashboard/calendar.html', context)
 
 
 @role_required(User.Role.BARBER, User.Role.OWNER)

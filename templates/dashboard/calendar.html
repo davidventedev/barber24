@@ -97,6 +97,24 @@
       {% elif week_offset != 0 %}
         <a class="btn btn-ghost btn-sm gcal-today" href="?view=week{{ barber_q }}">Hoy</a>
       {% endif %}
+      <div
+        class="gcal-date-picker"
+        data-date-picker
+        data-selected="{{ selected_day.date|date:'Y-m-d' }}"
+        data-today="{{ today|date:'Y-m-d' }}"
+        data-view="{{ view_mode }}"
+        data-path="{{ request.path }}"
+        data-barber="{% if selected_barber %}{{ selected_barber.pk }}{% endif %}"
+      >
+        <button type="button" class="gcal-date-btn" data-date-picker-toggle aria-label="Elegir fecha" aria-haspopup="dialog" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2"/>
+            <path d="M3 10h18"/>
+            <path d="M8 3v4M16 3v4"/>
+          </svg>
+        </button>
+        <div class="gcal-date-pop" data-date-picker-pop hidden role="dialog" aria-label="Seleccionar fecha"></div>
+      </div>
     </div>
   </header>
 
@@ -122,7 +140,7 @@
         <div class="gcal-times" id="gcal-times" style="height: {{ grid_height }}px;">
           {% for h in hours %}
           <div class="gcal-hour-label {% if h in closed_hours %}is-closed{% endif %}" style="height: {{ px_per_hour }}px;">
-            <span>{% if h < 10 %}0{% endif %}{{ h }}:00</span>
+            <span>{% if h < 10 %}0{% endif %}{{ h }}</span>
           </div>
           {% endfor %}
         </div>
@@ -163,29 +181,13 @@
                 </div>
                 {% endfor %}
               {% else %}
-                <div class="gcal-col {% if selected_day.is_today %}is-today{% endif %}">
-                  {% for h in hours %}
-                  <div class="gcal-slot {% if h in closed_hours %}is-closed{% endif %}" style="height: {{ px_per_hour }}px;"></div>
-                  {% endfor %}
-                  {% for band in selected_day.closed_ranges %}
-                  <div class="gcal-closed" style="top: {{ band.top }}px; height: {{ band.height }}px;" title="Fuera de horario"></div>
-                  {% endfor %}
-                  {% if show_now and now_day_index == selected_day.index %}
-                  <div class="gcal-now" style="top: {{ now_top }}px;" data-now data-now-date="{{ today|date:'Y-m-d' }}"></div>
-                  {% endif %}
-                  {% for item in selected_day.items %}
-                  {% include "dashboard/_gcal_event.html" with item=item compact=False %}
-                  {% endfor %}
-                </div>
+                {% include "dashboard/_gcal_day_column.html" %}
               {% endif %}
             </div>
           </div>
         </div>
       </div>
     </div>
-    {% if show_now %}
-    <span class="gcal-now-dot" data-now-dot hidden></span>
-    {% endif %}
   </div>
 </div>
 {% endblock %}
@@ -234,6 +236,271 @@
   requestAnimationFrame(syncGcalHeaderPad);
   window.addEventListener('resize', syncGcalHeaderPad);
 
+  /* Shared date helpers */
+  function parseKey(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function toKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  function addDays(date, n) {
+    const x = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+  function localDateKey(d) {
+    return toKey(d);
+  }
+  function minutesFromMidnight(d) {
+    return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+  }
+
+  const scrollEl = document.getElementById('gcal-scroll');
+  const timesEl = document.getElementById('gcal-times');
+  const columnsEl = document.querySelector('.gcal-columns');
+  const titleEl = document.querySelector('.gcal-title');
+  let openTop = {{ open_top|default:0 }};
+  const pxPerHour = {{ px_per_hour|default:96 }};
+  const gridHeight = {{ grid_height|default:1152 }};
+  const NOW_TICK_MS = 15000;
+  const todayKey = '{{ today|date:"Y-m-d" }}';
+  const agendaPath = '{{ request.path|escapejs }}';
+  const barberId = '{% if selected_barber %}{{ selected_barber.pk }}{% endif %}';
+  let navigating = false;
+  let navSeq = 0;
+  let stripApi = null;
+
+  function weekParams(target) {
+    const today = parseKey(todayKey);
+    const weekStart = addDays(today, -today.getDay());
+    const diff = Math.round((target - weekStart) / 86400000);
+    const w = Math.floor(diff / 7);
+    const d = ((diff % 7) + 7) % 7;
+    return { w, d };
+  }
+
+  function dayHref(dateOrKey, viewMode) {
+    const date = typeof dateOrKey === 'string' ? parseKey(dateOrKey) : dateOrKey;
+    const { w, d } = weekParams(date);
+    const params = new URLSearchParams();
+    params.set('view', viewMode || 'day');
+    params.set('w', String(w));
+    params.set('d', String(d));
+    if (barberId) params.set('barber', barberId);
+    return `${agendaPath}?${params.toString()}`;
+  }
+
+  function syncTimesScroll() {
+    if (!timesEl || !scrollEl) return;
+    timesEl.style.transform = `translateY(${-scrollEl.scrollTop}px)`;
+  }
+
+  function updateNowLine() {
+    const line = document.querySelector('[data-now]');
+    if (!line) return;
+    const now = new Date();
+    if (line.dataset.nowDate && line.dataset.nowDate !== localDateKey(now)) {
+      line.hidden = true;
+      return;
+    }
+    const top = (minutesFromMidnight(now) / 60) * pxPerHour;
+    if (top < 0 || top > gridHeight) {
+      line.hidden = true;
+      return;
+    }
+    line.hidden = false;
+    line.style.top = `${top.toFixed(2)}px`;
+  }
+
+  function updateClosedHours(closedHours) {
+    if (!timesEl || !Array.isArray(closedHours)) return;
+    const closed = new Set(closedHours.map(Number));
+    timesEl.querySelectorAll('.gcal-hour-label').forEach((el, i) => {
+      el.classList.toggle('is-closed', closed.has(i));
+    });
+  }
+
+  function syncTodayButton(data) {
+    const right = document.querySelector('.gcal-toolbar-right');
+    if (!right) return;
+    let btn = right.querySelector('.gcal-today');
+    if (data.is_today) {
+      if (btn) btn.remove();
+      return;
+    }
+    if (!btn) {
+      btn = document.createElement('a');
+      btn.className = 'btn btn-ghost btn-sm gcal-today';
+      btn.textContent = 'Hoy';
+      const picker = right.querySelector('.gcal-date-picker');
+      right.insertBefore(btn, picker || null);
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateDay({ href: btn.getAttribute('href'), smoothStrip: true });
+      });
+    }
+    btn.setAttribute('href', data.today_url || dayHref(todayKey, 'day'));
+  }
+
+  function applyDayPayload(data, { push = false, smoothStrip = true } = {}) {
+    if (!columnsEl || !data || !data.html) return;
+    columnsEl.innerHTML = data.html;
+    if (titleEl && data.month_label) titleEl.textContent = data.month_label;
+    if (root) {
+      if (data.prev_day) root.dataset.prevDay = data.prev_day;
+      if (data.next_day) root.dataset.nextDay = data.next_day;
+    }
+    const arrowLinks = document.querySelectorAll('.gcal-nav-arrows a.gcal-arrow');
+    if (arrowLinks[0] && data.prev_day) arrowLinks[0].setAttribute('href', data.prev_day);
+    if (arrowLinks[1] && data.next_day) arrowLinks[1].setAttribute('href', data.next_day);
+    openTop = parseFloat(data.open_top) || openTop;
+    updateClosedHours(data.closed_hours);
+    syncTodayButton(data);
+    const picker = document.querySelector('[data-date-picker]');
+    if (picker && data.date) picker.dataset.selected = data.date;
+    if (stripApi && data.date) stripApi.selectDate(data.date, { smooth: smoothStrip });
+    if (push && data.url) {
+      history.pushState({ gcalDay: data.date }, '', data.url);
+    }
+    updateNowLine();
+    if (scrollEl) {
+      const line = document.querySelector('[data-now]');
+      if (line && !line.hidden) {
+        scrollEl.scrollTop = Math.max(0, line.offsetTop - scrollEl.clientHeight / 3);
+      } else {
+        scrollEl.scrollTop = Math.max(0, openTop - pxPerHour);
+      }
+      syncTimesScroll();
+    }
+  }
+
+  async function navigateDay({ href, smoothStrip = true, push = true } = {}) {
+    if (!href) return;
+    if (root && root.dataset.view !== 'day') {
+      window.location.href = href;
+      return;
+    }
+    const seq = ++navSeq;
+    navigating = true;
+    try {
+      const url = new URL(href, window.location.href);
+      url.searchParams.set('view', 'day');
+      // Optimistic strip selection from the target URL while data loads.
+      const targetW = url.searchParams.get('w');
+      const targetD = url.searchParams.get('d');
+      if (stripApi && targetW != null && targetD != null) {
+        const today = parseKey(todayKey);
+        const weekStart = addDays(today, -today.getDay());
+        const targetDate = addDays(weekStart, Number(targetW) * 7 + Number(targetD));
+        stripApi.selectDate(toKey(targetDate), { smooth: smoothStrip });
+      }
+      url.searchParams.set('partial', 'day');
+      const res = await fetch(url.toString(), {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          Accept: 'application/json',
+        },
+        credentials: 'same-origin',
+      });
+      if (!res.ok) throw new Error('partial failed');
+      const data = await res.json();
+      if (seq !== navSeq) return;
+      applyDayPayload(data, { push, smoothStrip });
+    } catch (_) {
+      if (seq === navSeq) window.location.href = href;
+    } finally {
+      if (seq === navSeq) navigating = false;
+    }
+  }
+
+  /* ── Date picker (toolbar calendar icon) ── */
+  (function initDatePicker() {
+    const picker = document.querySelector('[data-date-picker]');
+    if (!picker) return;
+    const toggle = picker.querySelector('[data-date-picker-toggle]');
+    const pop = picker.querySelector('[data-date-picker-pop]');
+    if (!toggle || !pop) return;
+
+    const MON = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const DOW = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+    let cursor = parseKey(picker.dataset.selected || todayKey);
+
+    function close() {
+      pop.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+    function open() {
+      render();
+      pop.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+    function render() {
+      const selectedKey = picker.dataset.selected || todayKey;
+      const year = cursor.getFullYear();
+      const month = cursor.getMonth();
+      const first = new Date(year, month, 1);
+      const start = addDays(first, -first.getDay());
+      let html = `<div class="gcal-date-pop-head">` +
+        `<button type="button" class="gcal-date-pop-nav" data-nav="-1" aria-label="Mes anterior">` +
+        `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>` +
+        `</button>` +
+        `<p class="gcal-date-pop-title">${MON[month]} ${year}</p>` +
+        `<button type="button" class="gcal-date-pop-nav" data-nav="1" aria-label="Mes siguiente">` +
+        `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>` +
+        `</button></div>`;
+      html += `<div class="gcal-date-pop-dows">${DOW.map((d) => `<span>${d}</span>`).join('')}</div>`;
+      html += `<div class="gcal-date-pop-grid">`;
+      for (let i = 0; i < 42; i++) {
+        const date = addDays(start, i);
+        const key = toKey(date);
+        const classes = ['gcal-date-pop-day'];
+        if (date.getMonth() !== month) classes.push('is-other');
+        if (key === todayKey) classes.push('is-today');
+        if (key === selectedKey) classes.push('is-selected');
+        html += `<button type="button" class="${classes.join(' ')}" data-date="${key}">${date.getDate()}</button>`;
+      }
+      html += `</div>`;
+      pop.innerHTML = html;
+    }
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (pop.hidden) open();
+      else close();
+    });
+    pop.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const nav = e.target.closest('[data-nav]');
+      if (nav) {
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth() + Number(nav.dataset.nav), 1);
+        render();
+        return;
+      }
+      const dayBtn = e.target.closest('[data-date]');
+      if (dayBtn) {
+        close();
+        const viewMode = picker.dataset.view || 'day';
+        const href = dayHref(dayBtn.dataset.date, viewMode);
+        if (viewMode === 'day') navigateDay({ href, smoothStrip: true });
+        else window.location.href = href;
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!pop.hidden && !picker.contains(e.target)) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !pop.hidden) {
+        close();
+        toggle.focus();
+      }
+    });
+  })();
+
   /* ── Infinite horizontal day cards (day view) ── */
   (function initDayStrip() {
     const strip = document.querySelector('[data-day-strip]');
@@ -241,51 +508,16 @@
     const track = strip.querySelector('[data-day-strip-track]');
     if (!track) return;
 
-    const DOW = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const selectedKey = strip.dataset.selected;
-    const todayKey = strip.dataset.today;
-    const path = strip.dataset.path || window.location.pathname;
-    const barberId = strip.dataset.barber || '';
+    const DOW = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+    let selectedKey = strip.dataset.selected;
     const CHUNK = 21;
     const EDGE = 120;
 
-    function parseKey(key) {
-      const [y, m, d] = key.split('-').map(Number);
-      return new Date(y, m - 1, d);
-    }
-    function toKey(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-    function addDays(date, n) {
-      const x = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      x.setDate(x.getDate() + n);
-      return x;
-    }
-    function weekParams(target) {
-      const today = parseKey(todayKey);
-      const weekStart = addDays(today, -today.getDay());
-      const diff = Math.round((target - weekStart) / 86400000);
-      const w = Math.floor(diff / 7);
-      const d = ((diff % 7) + 7) % 7;
-      return { w, d };
-    }
-    function dayUrl(date) {
-      const { w, d } = weekParams(date);
-      const params = new URLSearchParams();
-      params.set('view', 'day');
-      params.set('w', String(w));
-      params.set('d', String(d));
-      if (barberId) params.set('barber', barberId);
-      return `${path}?${params.toString()}`;
-    }
     function makeCard(date) {
       const key = toKey(date);
       const a = document.createElement('a');
       a.className = 'gcal-day-card';
-      a.href = dayUrl(date);
+      a.href = dayHref(date, 'day');
       a.dataset.date = key;
       if (key === todayKey) a.classList.add('is-today');
       if (key === selectedKey) a.classList.add('is-selected');
@@ -313,12 +545,14 @@
 
     track.appendChild(renderRange(startDate, endDate));
 
-    function centerSelected() {
-      const selected = track.querySelector('.gcal-day-card.is-selected');
-      if (!selected) return;
-      const left =
-        selected.offsetLeft - (strip.clientWidth / 2) + (selected.offsetWidth / 2);
-      strip.scrollLeft = Math.max(0, left);
+    function scrollCardToCenter(card, behavior = 'auto') {
+      if (!card) return;
+      const left = Math.max(
+        0,
+        card.offsetLeft - (strip.clientWidth / 2) + (card.offsetWidth / 2)
+      );
+      if (behavior === 'smooth') strip.scrollTo({ left, behavior: 'smooth' });
+      else strip.scrollLeft = left;
     }
 
     function prepend() {
@@ -343,126 +577,87 @@
       extending = false;
     }
 
+    function ensureDateInRange(key) {
+      const date = parseKey(key);
+      let guard = 0;
+      while (date < startDate && guard < 20) {
+        prepend();
+        guard += 1;
+      }
+      guard = 0;
+      while (date > endDate && guard < 20) {
+        append();
+        guard += 1;
+      }
+      if (date < startDate || date > endDate) {
+        track.innerHTML = '';
+        startDate = addDays(date, -CHUNK);
+        endDate = addDays(date, CHUNK);
+        track.appendChild(renderRange(startDate, endDate));
+      }
+    }
+
+    function selectDate(key, { smooth = true } = {}) {
+      if (!key) return;
+      selectedKey = key;
+      strip.dataset.selected = key;
+      ensureDateInRange(key);
+      track.querySelectorAll('.gcal-day-card').forEach((el) => {
+        const on = el.dataset.date === key;
+        el.classList.toggle('is-selected', on);
+        if (on) el.setAttribute('aria-current', 'date');
+        else el.removeAttribute('aria-current');
+        if (!on && document.activeElement === el) el.blur();
+      });
+      const card = track.querySelector(`.gcal-day-card[data-date="${key}"]`);
+      if (!card) return;
+      if (document.activeElement && document.activeElement !== card) {
+        try { document.activeElement.blur(); } catch (_) {}
+      }
+      scrollCardToCenter(card, smooth ? 'smooth' : 'auto');
+      if (strip.scrollLeft < EDGE) prepend();
+      if (strip.scrollLeft + strip.clientWidth > track.scrollWidth - EDGE) append();
+    }
+
     strip.addEventListener('scroll', () => {
       if (strip.scrollLeft < EDGE) prepend();
       if (strip.scrollLeft + strip.clientWidth > track.scrollWidth - EDGE) append();
     }, { passive: true });
 
-    // Avoid vertical-board swipe stealing horizontal strip gestures.
+    track.addEventListener('click', (e) => {
+      const a = e.target.closest('a.gcal-day-card');
+      if (!a || !track.contains(a)) return;
+      e.preventDefault();
+      if (a.dataset.date === selectedKey) return;
+      navigateDay({ href: a.href, smoothStrip: true });
+    });
+
     strip.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
     strip.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
 
     requestAnimationFrame(() => {
-      centerSelected();
+      selectDate(selectedKey, { smooth: false });
       syncGcalHeaderPad();
-      // Ensure edges are buffered after centering.
-      if (strip.scrollLeft < EDGE) prepend();
-      if (strip.scrollLeft + strip.clientWidth > track.scrollWidth - EDGE) append();
     });
+
+    stripApi = { selectDate };
   })();
-
-  const scrollEl = document.getElementById('gcal-scroll');
-  const timesEl = document.getElementById('gcal-times');
-  const nowLine = document.querySelector('[data-now]');
-  const nowDot = document.querySelector('[data-now-dot]');
-  const boardEl = document.querySelector('.gcal-board');
-  const openTop = {{ open_top|default:0 }};
-  const pxPerHour = {{ px_per_hour|default:96 }};
-  const gridHeight = {{ grid_height|default:1152 }};
-  const NOW_TICK_MS = 15000;
-
-  function syncTimesScroll() {
-    if (!timesEl || !scrollEl) return;
-    timesEl.style.transform = `translateY(${-scrollEl.scrollTop}px)`;
-  }
-
-  function syncNowDot() {
-    if (!nowDot || !boardEl) return;
-    const line = document.querySelector('[data-now]');
-    if (!line || line.hidden) {
-      nowDot.hidden = true;
-      return;
-    }
-    const frame = boardEl.querySelector('.gcal-frame');
-    const clipEl = scrollEl || frame;
-    if (!clipEl) {
-      nowDot.hidden = true;
-      return;
-    }
-    const lineRect = line.getBoundingClientRect();
-    const boardRect = boardEl.getBoundingClientRect();
-    const clipRect = clipEl.getBoundingClientRect();
-    if (lineRect.bottom < clipRect.top || lineRect.top > clipRect.bottom) {
-      nowDot.hidden = true;
-      return;
-    }
-    if (lineRect.right < clipRect.left || lineRect.left > clipRect.right) {
-      nowDot.hidden = true;
-      return;
-    }
-    nowDot.hidden = false;
-    nowDot.style.top = `${lineRect.top - boardRect.top + lineRect.height / 2}px`;
-    nowDot.style.left = `${lineRect.left - boardRect.left}px`;
-  }
-
-  function localDateKey(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-
-  function minutesFromMidnight(d) {
-    return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
-  }
-
-  function updateNowLine() {
-    const line = document.querySelector('[data-now]');
-    if (!line) {
-      if (nowDot) nowDot.hidden = true;
-      return;
-    }
-    const now = new Date();
-    if (line.dataset.nowDate && line.dataset.nowDate !== localDateKey(now)) {
-      line.hidden = true;
-      if (nowDot) nowDot.hidden = true;
-      return;
-    }
-    const top = (minutesFromMidnight(now) / 60) * pxPerHour;
-    if (top < 0 || top > gridHeight) {
-      line.hidden = true;
-      if (nowDot) nowDot.hidden = true;
-      return;
-    }
-    line.hidden = false;
-    line.style.top = `${top.toFixed(2)}px`;
-    syncNowDot();
-  }
 
   updateNowLine();
   setInterval(updateNowLine, NOW_TICK_MS);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) updateNowLine();
   });
-  window.addEventListener('resize', syncNowDot);
 
   if (scrollEl) {
-    scrollEl.addEventListener('scroll', () => {
-      syncTimesScroll();
-      syncNowDot();
-    }, { passive: true });
+    scrollEl.addEventListener('scroll', syncTimesScroll, { passive: true });
+    const nowLine = document.querySelector('[data-now]');
     if (nowLine && !nowLine.hidden) {
       scrollEl.scrollTop = Math.max(0, nowLine.offsetTop - scrollEl.clientHeight / 3);
     } else {
       scrollEl.scrollTop = Math.max(0, openTop - pxPerHour);
     }
     syncTimesScroll();
-    syncNowDot();
-  }
-
-  const frameX = document.getElementById('gcal-frame-x');
-  if (frameX) {
-    frameX.addEventListener('scroll', syncNowDot, { passive: true });
   }
 
   function closeAll() {
@@ -473,8 +668,11 @@
     });
   }
 
-  document.querySelectorAll('[data-event]').forEach((el) => {
-    el.addEventListener('click', (e) => {
+  // Event popovers via delegation (survives day swaps).
+  if (scrollEl) {
+    scrollEl.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-event]');
+      if (!el || !scrollEl.contains(el)) return;
       if (e.target.closest('.gcal-event-pop')) return;
       e.stopPropagation();
       const pop = el.querySelector('.gcal-event-pop');
@@ -485,9 +683,33 @@
         pop.hidden = false;
       }
     });
+  }
+  document.addEventListener('click', closeAll);
+
+  document.querySelectorAll('a.gcal-today').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      if (!root || root.dataset.view !== 'day') return;
+      e.preventDefault();
+      navigateDay({ href: a.href, smoothStrip: true });
+    });
   });
 
-  document.addEventListener('click', closeAll);
+  document.querySelectorAll('.gcal-nav-arrows a.gcal-arrow').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      if (!root || root.dataset.view !== 'day') return;
+      e.preventDefault();
+      navigateDay({ href: a.href, smoothStrip: true });
+    });
+  });
+
+  window.addEventListener('popstate', () => {
+    if (!root || root.dataset.view !== 'day') return;
+    navigateDay({
+      href: window.location.pathname + window.location.search,
+      push: false,
+      smoothStrip: true,
+    });
+  });
 
   // Mobile: horizontal swipe changes day.
   const swipeEl = document.querySelector('[data-gcal-swipe]');
@@ -529,7 +751,7 @@
     const dy = t.clientY - startY;
     if (Math.abs(dx) < THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.15) return;
     const url = dx < 0 ? root.dataset.nextDay : root.dataset.prevDay;
-    if (url) window.location.href = url;
+    if (url) navigateDay({ href: url, smoothStrip: true });
   }, { passive: true });
 })();
 </script>
