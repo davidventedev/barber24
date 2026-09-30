@@ -969,7 +969,8 @@ body:has(.gcal-page) {
   right: 0;
   height: 2px;
   background: #ea4335;
-  z-index: 4;
+  /* Above events (2), below sticky header (4) so it never paints over "MARTES / día". */
+  z-index: 3;
   pointer-events: none;
 }
 .gcal-now-dot {
