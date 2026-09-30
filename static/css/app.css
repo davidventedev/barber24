@@ -1118,7 +1118,7 @@ body:has(.gcal-page) {
 
 .gcal-now {
   position: absolute;
-  left: 0;
+  left: 5px;
   right: 0;
   height: 2px;
   background: #ea4335;
