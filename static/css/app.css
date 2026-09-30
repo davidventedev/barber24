@@ -483,16 +483,23 @@ body:has(.gcal-page) {
   flex-direction: column;
 }
 .gcal {
-  --gcal-gutter: 52px;
+  --gcal-gutter: 40px;
   display: grid;
   grid-template-columns: var(--gcal-gutter) minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  column-gap: 0.4rem;
+  column-gap: 0.3rem;
   row-gap: 0.85rem;
   flex: 1;
   min-height: 0;
   height: auto;
   align-content: stretch;
+}
+.gcal:has(.gcal-day-strip-wrap) {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.gcal-day-strip-wrap {
+  grid-column: 1 / -1;
+  min-width: 0;
 }
 @media (max-width: 768px) {
   .gcal:not([data-gcal-ready]) { visibility: hidden; }
@@ -605,18 +612,42 @@ body:has(.gcal-page) {
 }
 @media (max-width: 768px) {
   .gcal-toolbar {
-    gap: 0.85rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
     padding: 0.45rem 0 0.3rem;
   }
+  .gcal-title,
+  .gcal-nav-arrows {
+    display: none !important;
+  }
   .gcal-toolbar-left {
-    display: contents;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1;
   }
   .gcal-barber {
-    grid-column: 1 / -1;
-    width: 100%;
+    width: auto;
+    flex: 1;
+    min-width: 0;
   }
-  .gcal-nav-arrows {
-    justify-self: start;
+  .gcal-toolbar-right {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  .gcal-day-strip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .gcal-day-strip-track {
+    padding: 0.45rem 0.5rem;
+  }
+  .gcal-board-day .gcal-gutter-head {
+    display: none;
   }
   .gcal-barber-avatar {
     width: 56px;
@@ -876,8 +907,8 @@ body:has(.gcal-page) {
 .gcal-hour-label span {
   position: absolute;
   top: -0.55em;
-  right: 0.2rem;
-  font-size: 0.68rem;
+  right: 0.1rem;
+  font-size: 0.62rem;
   color: #c2c2c2;
   font-variant-numeric: tabular-nums;
 }
@@ -926,11 +957,7 @@ body:has(.gcal-page) {
   border-bottom: 1px solid var(--border);
 }
 .gcal-header-row-day {
-  display: block;
-  grid-template-columns: none;
-  padding: 0;
-  border-bottom: 0;
-  background: transparent;
+  display: none;
 }
 .gcal-day-strip {
   overflow-x: auto;
@@ -1219,9 +1246,24 @@ body:has(.gcal-page) {
     grid-template-columns: var(--gcal-gutter) minmax(0, 1fr) var(--gcal-gutter);
     column-gap: 0.25rem;
   }
+  .gcal-hour-label span {
+    right: 0.2rem;
+    font-size: 0.68rem;
+  }
   .gcal-toolbar {
     grid-column: 2;
     padding: 0.5rem 0 0.25rem;
+  }
+  .gcal-day-strip-wrap {
+    grid-column: 2;
+  }
+  .gcal-day-strip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .gcal-day-strip-track {
+    padding: 0.5rem 0.55rem;
   }
   .gcal-board {
     --gcal-col-min: 120px;

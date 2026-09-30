@@ -100,6 +100,21 @@
     </div>
   </header>
 
+  {% if view_mode == 'day' %}
+  <div class="gcal-day-strip-wrap">
+    <div
+      class="gcal-day-strip"
+      data-day-strip
+      data-selected="{{ selected_day.date|date:'Y-m-d' }}"
+      data-today="{{ today|date:'Y-m-d' }}"
+      data-path="{{ request.path }}"
+      data-barber="{% if selected_barber %}{{ selected_barber.pk }}{% endif %}"
+    >
+      <div class="gcal-day-strip-track" data-day-strip-track></div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="gcal-board {% if view_mode == 'day' %}gcal-board-day{% endif %}" data-gcal-swipe style="--gcal-hour: {{ px_per_hour }}px; --gcal-cols: {% if view_mode == 'day' %}1{% else %}7{% endif %};">
     <div class="gcal-gutter">
       <div class="gcal-gutter-head" aria-hidden="true"></div>
@@ -117,27 +132,16 @@
     <div class="gcal-frame">
       <div class="gcal-frame-x" id="gcal-frame-x">
         <div class="gcal-frame-inner">
-          <div class="gcal-header-row {% if view_mode == 'day' %}gcal-header-row-day{% endif %}">
-            {% if view_mode == 'week' %}
-              {% for day in days %}
-              <div class="gcal-col-head {% if day.is_today %}is-today{% endif %}">
-                <span class="dow">{{ day.date|date:"D"|slice:":3" }}</span>
-                <span class="dom">{{ day.date|date:"j" }}</span>
-              </div>
-              {% endfor %}
-            {% else %}
-              <div
-                class="gcal-day-strip"
-                data-day-strip
-                data-selected="{{ selected_day.date|date:'Y-m-d' }}"
-                data-today="{{ today|date:'Y-m-d' }}"
-                data-path="{{ request.path }}"
-                data-barber="{% if selected_barber %}{{ selected_barber.pk }}{% endif %}"
-              >
-                <div class="gcal-day-strip-track" data-day-strip-track></div>
-              </div>
-            {% endif %}
+          {% if view_mode == 'week' %}
+          <div class="gcal-header-row">
+            {% for day in days %}
+            <div class="gcal-col-head {% if day.is_today %}is-today{% endif %}">
+              <span class="dow">{{ day.date|date:"D"|slice:":3" }}</span>
+              <span class="dom">{{ day.date|date:"j" }}</span>
+            </div>
+            {% endfor %}
           </div>
+          {% endif %}
 
           <div class="gcal-scroll" id="gcal-scroll">
             <div class="gcal-columns" style="height: {{ grid_height }}px;">
@@ -222,8 +226,10 @@
 
   function syncGcalHeaderPad() {
     const head = document.querySelector('.gcal-header-row');
-    if (!head) return;
-    document.documentElement.style.setProperty('--gcal-header-h', `${head.offsetHeight}px`);
+    document.documentElement.style.setProperty(
+      '--gcal-header-h',
+      head ? `${head.offsetHeight}px` : '0px'
+    );
   }
   syncGcalHeaderPad();
   requestAnimationFrame(syncGcalHeaderPad);
