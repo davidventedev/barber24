@@ -29,6 +29,7 @@
   --display: "Bebas Neue", "Arial Narrow", sans-serif;
   --nav-h: 64px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --gcal-nav-gap: 12px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -459,6 +460,8 @@ body:has(.gcal-page) {
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
+  /* Keep a visible gap between the calendar bottom border and the mobile toolbar */
+  padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + var(--gcal-nav-gap));
 }
 .gcal-page {
   width: min(1200px, 100% - 1rem);
@@ -1079,6 +1082,9 @@ body:has(.gcal-page) {
   body:has(.gcal-page) {
     max-height: none;
     height: 100dvh;
+  }
+  .app-shell:has(.gcal-page) {
+    padding-bottom: 0;
   }
   .gcal-page {
     width: min(1200px, 100% - 2rem);
