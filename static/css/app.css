@@ -639,12 +639,9 @@ body:has(.gcal-page) {
     margin-left: auto;
   }
   .gcal-day-strip {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-  .gcal-day-strip-track {
-    padding: 0.45rem 0.5rem;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
   }
   .gcal-board-day .gcal-gutter-head {
     display: none;
@@ -966,8 +963,8 @@ body:has(.gcal-page) {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: transparent;
+  border: 0;
   touch-action: pan-x;
 }
 .gcal-day-strip::-webkit-scrollbar { display: none; }
@@ -1263,12 +1260,9 @@ body:has(.gcal-page) {
     grid-column: 2;
   }
   .gcal-day-strip {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-  .gcal-day-strip-track {
-    padding: 0.5rem 0.55rem;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
   }
   .gcal-board {
     --gcal-col-min: 120px;
