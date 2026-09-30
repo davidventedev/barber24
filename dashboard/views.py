@@ -8,6 +8,7 @@ from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.views.decorators.http import require_http_methods
 
 from accounts.decorators import role_required, shop_required
@@ -302,9 +303,18 @@ def calendar_view(request):
         })
 
     selected_day = days[day_index]
-    month_label = start.strftime('%B %Y').capitalize()
-    if start.month != (end - timedelta(days=1)).month:
-        month_label = f'{start.strftime("%b").capitalize()} – {(end - timedelta(days=1)).strftime("%b %Y").capitalize()}'
+    if view_mode == 'day':
+        d = selected_day['date']
+        month_label = f'{d.day} {date_format(d, "b").capitalize()} {d.year}'
+    else:
+        last = end - timedelta(days=1)
+        if start.month == last.month:
+            month_label = f'{date_format(start, "F")} {start.year}'.capitalize()
+        else:
+            month_label = (
+                f'{date_format(start, "b").capitalize()} – '
+                f'{date_format(last, "b").capitalize()} {last.year}'
+            )
 
     def _shift_day(delta):
         idx = day_index + delta

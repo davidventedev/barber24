@@ -38,7 +38,7 @@ def manifest(request):
 @require_GET
 def service_worker(request):
     js = """
-const CACHE = 'barber24-v8';
+const CACHE = 'barber24-v11';
 const ASSETS = [
   '/',
   '/static/css/app.css',

@@ -67,7 +67,6 @@
     {% endif %}
     <div class="gcal-toolbar-controls">
       <div class="gcal-toolbar-left">
-        <a class="btn btn-ghost btn-sm gcal-today" href="?view={{ view_mode }}{{ barber_q }}">Hoy</a>
         <div class="gcal-nav-arrows">
           {% if view_mode == 'day' %}
           <a class="gcal-arrow" href="?w={{ prev_day_w }}&view=day&d={{ prev_day_d }}{{ barber_q }}" aria-label="Día anterior">
@@ -85,13 +84,20 @@
           </a>
           {% endif %}
         </div>
-        <h1 class="gcal-title">{{ month_label }}</h1>
       </div>
+      <h1 class="gcal-title">{{ month_label }}</h1>
       <div class="gcal-toolbar-right">
         <div class="gcal-view-switch" role="tablist">
           <a href="?w={{ week_offset }}&view=day&d={{ day_index }}{{ barber_q }}" class="{% if view_mode == 'day' %}active{% endif %}" role="tab">Día</a>
           <a href="?w={{ week_offset }}&view=week&d={{ day_index }}{{ barber_q }}" class="{% if view_mode == 'week' %}active{% endif %}" role="tab">Semana</a>
         </div>
+        {% if view_mode == 'day' %}
+          {% if not selected_day.is_today %}
+          <a class="btn btn-ghost btn-sm gcal-today" href="?view=day{{ barber_q }}">Hoy</a>
+          {% endif %}
+        {% elif week_offset != 0 %}
+          <a class="btn btn-ghost btn-sm gcal-today" href="?view=week{{ barber_q }}">Hoy</a>
+        {% endif %}
       </div>
     </div>
   </header>
