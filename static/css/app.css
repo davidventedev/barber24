@@ -33,7 +33,10 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
 body {
   margin: 0;
   min-height: 100dvh;
@@ -43,8 +46,23 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   padding-bottom: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 body.no-nav-pad { padding-bottom: 0; }
+
+/* Kill the default rectangular press/focus flash that ignores border-radius. */
+a, button, [role="button"], input, select, textarea, label, summary,
+.btn, .gcal-day-card, .gcal-event, .bottom-nav a {
+  -webkit-tap-highlight-color: transparent;
+}
+a:focus, button:focus, [role="button"]:focus, input:focus, select:focus,
+textarea:focus, summary:focus, .btn:focus, .gcal-day-card:focus,
+.gcal-event:focus, .bottom-nav a:focus,
+a:focus-visible, button:focus-visible, [role="button"]:focus-visible,
+.btn:focus-visible, .gcal-day-card:focus-visible, .gcal-event:focus-visible,
+.bottom-nav a:focus-visible, summary:focus-visible {
+  outline: none;
+}
 
 a { color: var(--primary); text-decoration: none; }
 a:hover { color: var(--primary-hover); }
