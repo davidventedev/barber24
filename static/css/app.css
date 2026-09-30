@@ -448,28 +448,19 @@ p { margin: 0 0 1rem; color: var(--text-muted); }
 /* Google Calendar–style agenda */
 body:has(.gcal-page) {
   overflow: hidden;
-  /* svh avoids mobile browser chrome making the grid sit under the nav */
-  height: 100vh;
-  height: 100dvh;
-  max-height: 100svh;
 }
 .app-shell:has(.gcal-page) {
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  /* Clearance comes from .gcal-page height, not shell padding (avoids flex/viewport fights). */
+  padding-bottom: 0;
   overflow: hidden;
-  box-sizing: border-box;
-  /* Keep a visible gap between the calendar bottom border and the mobile toolbar */
-  padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + var(--gcal-nav-gap));
 }
 .gcal-page {
   width: min(1200px, 100% - 1rem);
   padding-left: 0;
   padding-right: 0;
-  flex: 1 1 auto;
-  min-height: 0;
-  height: auto;
+  /* Size the agenda so its bottom edge sits above the fixed mobile toolbar. */
+  height: calc(100svh - var(--nav-h) - var(--safe-bottom) - var(--gcal-nav-gap) - 0.5rem);
+  max-height: calc(100dvh - var(--nav-h) - var(--safe-bottom) - var(--gcal-nav-gap) - 0.5rem);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1079,15 +1070,13 @@ body:has(.gcal-page) {
 }
 
 @media (min-width: 768px) {
-  body:has(.gcal-page) {
-    max-height: none;
-    height: 100dvh;
-  }
   .app-shell:has(.gcal-page) {
     padding-bottom: 0;
   }
   .gcal-page {
     width: min(1200px, 100% - 2rem);
+    height: calc(100dvh - 0.5rem);
+    max-height: none;
   }
   .gcal-title { font-size: 1.45rem; }
   .gcal-grid { --gcal-col-min: 120px; }
